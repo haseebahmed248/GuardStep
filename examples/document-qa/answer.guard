@@ -1,0 +1,38 @@
+// Draft GuardStep syntax. This example is not executable yet.
+
+record Question {
+  text: String
+}
+
+record Citation {
+  title: String
+  url: String
+}
+
+record Document {
+  title: String
+  url: String
+  content: String
+}
+
+record Answer {
+  text: String
+  citations: List<Citation>
+}
+
+tool documents.search(query: String) -> List<Document>
+
+workflow AnswerQuestion(input: Question) -> Answer {
+  allow tools [documents.search]
+  limit cost <= 0.05 USD
+  limit duration <= 20s
+
+  context = call documents.search(query: input.text)
+
+  answer = generate Answer using model("balanced") {
+    "Answer using only the supplied context: {context}"
+  }
+
+  require answer.citations.length > 0
+  return answer
+}
