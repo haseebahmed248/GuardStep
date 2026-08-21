@@ -1,6 +1,11 @@
-# GuardStep
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="logos/guardstep-logo-on-dark.svg">
+    <img src="logos/guardstep-logo.svg" alt="GuardStep" width="560">
+  </picture>
+</p>
 
-> AI workflows, one guarded step at a time.
+<p align="center"><strong>AI workflows, one guarded step at a time.</strong></p>
 
 GuardStep is a proposed open-source language for AI workflows. A GuardStep file is intended to declare data contracts, model calls, tool access, budgets, approval points, and failure conditions in one place.
 
