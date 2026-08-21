@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "budgets": {
+    "tool_calls": 1,
+    "model_calls": 1,
+    "duration_ms": 20000,
+    "cost": {
+      "currency": "USD",
+      "maximum": 0.05
+    }
+  },
+  "pricing": {
+    "currency": "USD",
+    "input_usd_per_million": 1,
+    "output_usd_per_million": 2,
+    "effective_date": "2026-08-21",
+    "source": "benchmark-fixture"
+  },
+  "scenarios": [
+    {
+      "id": "answered-single-source",
+      "input": {
+        "question": "Which document formats are supported and what is the per-file size limit?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["document-formats"],
+        "elapsed_ms": 40
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 210,
+        "usage": {
+          "input_tokens": 240,
+          "output_tokens": 60
+        },
+        "output": {
+          "status": "answered",
+          "text": "PDF, Markdown, and plain-text files are supported, with a 20 MB limit per file.",
+          "citations": [
+            {
+              "document_id": "document-formats",
+              "title": "Document formats and limits",
+              "url": "https://docs.guardstep.test/document-formats"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": "succeeded",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "run.succeeded"
+        ]
+      }
+    },
+    {
+      "id": "answered-multiple-sources",
+      "input": {
+        "question": "Can support disable MFA without approval, and how long are audit exports retained?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["account-security", "data-retention"],
+        "elapsed_ms": 55
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 260,
+        "usage": {
+          "input_tokens": 360,
+          "output_tokens": 85
+        },
+        "output": {
+          "status": "answered",
+          "text": "Support cannot disable MFA without workspace-owner approval. Audit exports are retained for 90 days.",
+          "citations": [
+            {
+              "document_id": "account-security",
+              "title": "Account security",
+              "url": "https://docs.guardstep.test/account-security"
+            },
+            {
+              "document_id": "data-retention",
+              "title": "Data retention",
+              "url": "https://docs.guardstep.test/data-retention"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": "succeeded",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "run.succeeded"
+        ]
+      }
+    },
+    {
+      "id": "insufficient-context",
+      "input": {
+        "question": "Does the service provide refunds for annual subscriptions?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": [],
+        "elapsed_ms": 35
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 120,
+        "usage": {
+          "input_tokens": 90,
+          "output_tokens": 25
+        },
+        "output": {
+          "status": "insufficient_context",
+          "text": "The supplied documents do not contain subscription refund information.",
+          "citations": []
+        }
+      },
+      "expect": {
+        "status": "succeeded",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "run.succeeded"
+        ]
+      }
+    },
+    {
+      "id": "citation-forbidden",
+      "input": {
+        "question": "How long are audit exports retained?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["data-retention"],
+        "elapsed_ms": 35
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 130,
+        "usage": {
+          "input_tokens": 180,
+          "output_tokens": 30
+        },
+        "output": {
+          "status": "insufficient_context",
+          "text": "The supplied documents do not contain enough information.",
+          "citations": [
+            {
+              "document_id": "data-retention",
+              "title": "Data retention",
+              "url": "https://docs.guardstep.test/data-retention"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "CITATION_FORBIDDEN",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "assertion.failed",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "capability-denied",
+      "input": {
+        "question": "Which document formats are supported?"
+      },
+      "granted_capabilities": [],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["document-formats"],
+        "elapsed_ms": 40
+      },
+      "model": {
+        "behavior": "not_reached"
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "CAPABILITY_DENIED",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "search-timeout",
+      "input": {
+        "question": "How can a member replace an MFA device?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "timeout",
+        "elapsed_ms": 5000
+      },
+      "model": {
+        "behavior": "not_reached"
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "SEARCH_TIMEOUT",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.failed",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "model-output-invalid",
+      "input": {
+        "question": "How long are audit exports retained?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["data-retention"],
+        "elapsed_ms": 45
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 170,
+        "usage": {
+          "input_tokens": 180,
+          "output_tokens": 25
+        },
+        "output": {
+          "text": "Audit exports are retained for 90 days.",
+          "citations": "data-retention"
+        }
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "MODEL_OUTPUT_INVALID",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.failed",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "citation-required",
+      "input": {
+        "question": "What is the maximum document size?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["document-formats"],
+        "elapsed_ms": 30
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 140,
+        "usage": {
+          "input_tokens": 170,
+          "output_tokens": 20
+        },
+        "output": {
+          "status": "answered",
+          "text": "The maximum size is 20 MB per file.",
+          "citations": []
+        }
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "CITATION_REQUIRED",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "assertion.failed",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "citation-unknown",
+      "input": {
+        "question": "How long are uploaded documents retained after workspace deletion?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["data-retention"],
+        "elapsed_ms": 35
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 160,
+        "usage": {
+          "input_tokens": 190,
+          "output_tokens": 35
+        },
+        "output": {
+          "status": "answered",
+          "text": "Uploaded documents are retained for 30 days after workspace deletion.",
+          "citations": [
+            {
+              "document_id": "unretrieved-document",
+              "title": "Unretrieved document",
+              "url": "https://docs.guardstep.test/unretrieved-document"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "CITATION_UNKNOWN",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "assertion.failed",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "cost-limit-exceeded",
+      "input": {
+        "question": "Summarize the supported document formats."
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["document-formats"],
+        "elapsed_ms": 45
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 220,
+        "usage": {
+          "input_tokens": 40000,
+          "output_tokens": 6000
+        },
+        "output": {
+          "status": "answered",
+          "text": "PDF, Markdown, and plain-text files are supported.",
+          "citations": [
+            {
+              "document_id": "document-formats",
+              "title": "Document formats and limits",
+              "url": "https://docs.guardstep.test/document-formats"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "COST_LIMIT_EXCEEDED",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "model.started",
+          "model.succeeded",
+          "budget.exceeded",
+          "run.failed"
+        ]
+      }
+    },
+    {
+      "id": "duration-limit-exceeded",
+      "input": {
+        "question": "How long are audit exports retained?"
+      },
+      "granted_capabilities": ["documents.search"],
+      "search": {
+        "behavior": "return",
+        "document_ids": ["data-retention"],
+        "elapsed_ms": 20001
+      },
+      "model": {
+        "behavior": "not_reached"
+      },
+      "expect": {
+        "status": "failed",
+        "error_code": "DURATION_LIMIT_EXCEEDED",
+        "required_events": [
+          "run.started",
+          "capability.checked",
+          "tool.started",
+          "tool.succeeded",
+          "budget.exceeded",
+          "run.failed"
+        ]
+      }
+    }
+  ]
+}

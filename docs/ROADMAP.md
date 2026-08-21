@@ -4,7 +4,7 @@ Dates are intentionally omitted until the validation work measures the scope.
 
 ## Stage 0: prove the need
 
-- Write three reference application requirements independent of any framework.
+- Write three reference application requirements independent of any framework. The first is the [document Q&A benchmark](../benchmarks/document-qa/README.md).
 - Implement document Q&A in plain TypeScript, BAML, and either LangGraph or Pydantic AI.
 - Draft at least two competing syntax styles.
 - Specify the minimum execution event model.
