@@ -4,6 +4,10 @@ Status: Stage 0 benchmark contract. This is not a GuardStep language specificati
 
 This benchmark compares how different implementations express and enforce the same small AI workflow. The first implementations will use plain TypeScript, BAML with TypeScript orchestration, LangGraph, and the GuardStep prototype.
 
+## Implementations
+
+- [Plain TypeScript baseline](implementations/typescript/README.md)
+
 The conformance suite is deterministic. It uses the documents and effect responses in [`fixtures`](fixtures/) instead of a live search service or model. Live-provider evaluation may be added later, but its results must be reported separately.
 
 ## Workflow
