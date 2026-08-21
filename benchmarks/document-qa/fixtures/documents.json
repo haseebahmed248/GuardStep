@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "documents": [
+    {
+      "id": "account-security",
+      "title": "Account security",
+      "url": "https://docs.guardstep.test/account-security",
+      "content": "A signed-in member can replace an MFA device from Settings > Security > Multi-factor authentication. If the member has lost every authentication factor, the workspace owner must approve recovery. Support cannot disable MFA without owner approval."
+    },
+    {
+      "id": "document-formats",
+      "title": "Document formats and limits",
+      "url": "https://docs.guardstep.test/document-formats",
+      "content": "Document search accepts PDF, Markdown, and plain-text files. Each file may be at most 20 MB. Password-protected PDFs are not supported."
+    },
+    {
+      "id": "data-retention",
+      "title": "Data retention",
+      "url": "https://docs.guardstep.test/data-retention",
+      "content": "Uploaded documents are deleted 30 days after their workspace is deleted. Audit exports are retained for 90 days. Workspace owners may request earlier deletion of uploaded documents."
+    }
+  ]
+}
