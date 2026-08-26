@@ -1,0 +1,25 @@
+{
+  "name": "@guardstep/benchmark-document-qa-baml",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "generate": "baml-cli generate",
+    "build": "npm run generate --silent && tsc --project tsconfig.json",
+    "check": "npm run generate --silent && tsc --project tsconfig.json --noEmit",
+    "benchmark": "npm run build --silent && node dist/src/cli.js",
+    "test": "node ../../validate-fixtures.mjs && npm run build --silent && node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@boundaryml/baml": "0.226.1",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "typescript": "7.0.2"
+  }
+}
