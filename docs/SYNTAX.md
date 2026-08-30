@@ -210,7 +210,7 @@ Only values placed in `context` reach the model. The runtime injects the request
 
 ### Events
 
-The compiler assigns stable step IDs. Runtime events are derived from effects, assertions, budgets, and terminal state; users do not manually emit lifecycle events required by the execution contract.
+The compiler assigns stable step IDs. Runtime events are derived from effects, assertions, budgets, and terminal state; users do not manually emit lifecycle events required by the [minimum execution event model](EXECUTION-EVENTS.md).
 
 ## Decision experiment
 

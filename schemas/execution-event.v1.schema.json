@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:execution-event:1",
+  "title": "GuardStep portable execution event v1",
+  "allOf": [
+    {
+      "$ref": "#/$defs/envelope"
+    },
+    {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "run.started" },
+            "sequence": { "const": 0 },
+            "data": { "$ref": "#/$defs/runStartedData" }
+          },
+          "not": { "required": ["step_id"] }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "capability.checked" },
+            "data": { "$ref": "#/$defs/capabilityCheckedData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "tool.started" },
+            "data": { "$ref": "#/$defs/toolStartedData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "tool.succeeded" },
+            "data": { "$ref": "#/$defs/toolSucceededData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "tool.failed" },
+            "data": { "$ref": "#/$defs/toolFailedData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "model.started" },
+            "data": { "$ref": "#/$defs/modelStartedData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "model.succeeded" },
+            "data": { "$ref": "#/$defs/modelSucceededData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "model.failed" },
+            "data": { "$ref": "#/$defs/modelFailedData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "assertion.failed" },
+            "data": { "$ref": "#/$defs/assertionFailedData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "budget.exceeded" },
+            "data": { "$ref": "#/$defs/budgetExceededData" }
+          },
+          "required": ["step_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "run.succeeded" },
+            "data": { "$ref": "#/$defs/runSucceededData" }
+          },
+          "not": { "required": ["step_id"] }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "run.failed" },
+            "data": { "$ref": "#/$defs/runFailedData" }
+          },
+          "not": { "required": ["step_id"] }
+        }
+      ]
+    }
+  ],
+  "$defs": {
+    "envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "sequence", "run_id", "type", "data"],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "run.started",
+            "capability.checked",
+            "tool.started",
+            "tool.succeeded",
+            "tool.failed",
+            "model.started",
+            "model.succeeded",
+            "model.failed",
+            "assertion.failed",
+            "budget.exceeded",
+            "run.succeeded",
+            "run.failed"
+          ]
+        },
+        "step_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "nonNegativeMilliseconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "positiveCall": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "errorCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_tokens", "output_tokens"],
+      "properties": {
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "amount"],
+      "properties": {
+        "currency": {
+          "type": "string",
+          "minLength": 1
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "runStartedData": {
+      "type": "object",
+      "required": ["workflow"],
+      "properties": {
+        "workflow": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "capabilityCheckedData": {
+      "type": "object",
+      "required": ["capability", "granted"],
+      "properties": {
+        "capability": {
+          "type": "string",
+          "minLength": 1
+        },
+        "granted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "toolStartedData": {
+      "type": "object",
+      "required": ["tool", "call"],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "call": {
+          "$ref": "#/$defs/positiveCall"
+        }
+      }
+    },
+    "toolSucceededData": {
+      "type": "object",
+      "required": ["tool", "elapsed_ms"],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "elapsed_ms": {
+          "$ref": "#/$defs/nonNegativeMilliseconds"
+        }
+      }
+    },
+    "toolFailedData": {
+      "type": "object",
+      "required": ["tool", "error_code", "elapsed_ms"],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error_code": {
+          "$ref": "#/$defs/errorCode"
+        },
+        "elapsed_ms": {
+          "$ref": "#/$defs/nonNegativeMilliseconds"
+        }
+      }
+    },
+    "modelStartedData": {
+      "type": "object",
+      "required": ["profile", "call"],
+      "properties": {
+        "profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "call": {
+          "$ref": "#/$defs/positiveCall"
+        }
+      }
+    },
+    "modelSucceededData": {
+      "type": "object",
+      "required": ["elapsed_ms"],
+      "properties": {
+        "elapsed_ms": {
+          "$ref": "#/$defs/nonNegativeMilliseconds"
+        },
+        "usage": {
+          "$ref": "#/$defs/usage"
+        },
+        "cost": {
+          "$ref": "#/$defs/cost"
+        }
+      }
+    },
+    "modelFailedData": {
+      "type": "object",
+      "required": ["error_code", "elapsed_ms"],
+      "properties": {
+        "error_code": {
+          "$ref": "#/$defs/errorCode"
+        },
+        "elapsed_ms": {
+          "$ref": "#/$defs/nonNegativeMilliseconds"
+        },
+        "issue_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "assertionFailedData": {
+      "type": "object",
+      "required": ["error_code"],
+      "properties": {
+        "error_code": {
+          "$ref": "#/$defs/errorCode"
+        }
+      }
+    },
+    "budgetExceededData": {
+      "type": "object",
+      "required": ["error_code", "actual", "maximum", "unit"],
+      "properties": {
+        "error_code": {
+          "$ref": "#/$defs/errorCode"
+        },
+        "actual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "runSucceededData": {
+      "type": "object",
+      "required": ["elapsed_ms"],
+      "properties": {
+        "elapsed_ms": {
+          "$ref": "#/$defs/nonNegativeMilliseconds"
+        },
+        "cost": {
+          "$ref": "#/$defs/cost"
+        }
+      }
+    },
+    "runFailedData": {
+      "type": "object",
+      "required": ["error_code"],
+      "properties": {
+        "error_code": {
+          "$ref": "#/$defs/errorCode"
+        }
+      }
+    }
+  }
+}

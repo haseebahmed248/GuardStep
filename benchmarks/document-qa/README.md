@@ -97,7 +97,7 @@ If several checks could fail, the implementation reports the first failure reach
 
 ## Event contract
 
-Every run emits a sequence conforming to [`event.schema.json`](schemas/event.schema.json). Sequence numbers begin at zero and increase by one. All events for a run share one `run_id`.
+Every run emits a sequence conforming to the canonical [`execution-event.v1.schema.json`](../../schemas/execution-event.v1.schema.json). Sequence numbers begin at zero and increase by one. All events for a run share one `run_id`. The lifecycle semantics are defined in the [minimum execution event model](../../docs/EXECUTION-EVENTS.md).
 
 Required event order:
 

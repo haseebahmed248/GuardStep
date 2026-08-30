@@ -11,13 +11,16 @@ import type { Answer, PortableEvent, QuestionInput } from "./types.js";
 const loadSchema = (name: string): object =>
   JSON.parse(readFileSync(join(benchmarkRoot, "schemas", name), "utf8")) as object;
 
+const loadRepositorySchema = (name: string): object =>
+  JSON.parse(readFileSync(join(benchmarkRoot, "..", "..", "schemas", name), "utf8")) as object;
+
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 const addFormats = formatsModule.default as unknown as FormatsPlugin;
 addFormats(ajv);
 
 export const inputSchema = loadSchema("input.schema.json");
 export const outputSchema = loadSchema("output.schema.json");
-export const eventSchema = loadSchema("event.schema.json");
+export const eventSchema = loadRepositorySchema("execution-event.v1.schema.json");
 
 const inputValidator = ajv.compile<QuestionInput>(inputSchema);
 const outputValidator = ajv.compile<Answer>(outputSchema);

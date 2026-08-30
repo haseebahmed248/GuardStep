@@ -82,7 +82,7 @@ export const checkConformance = (execution: ScenarioExecution): string[] => {
 
   for (const [index, event] of run.events.entries()) {
     if (!validateEvent(event).valid) {
-      failures.push(`event ${index} does not match event.schema.json`);
+      failures.push(`event ${index} does not match execution-event.v1.schema.json`);
     }
     if (event.sequence !== index) {
       failures.push(`event ${index} has sequence ${event.sequence}`);
