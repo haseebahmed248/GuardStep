@@ -1,0 +1,26 @@
+{
+  "name": "@guardstep/benchmark-document-qa-langgraph",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check": "tsc --project tsconfig.json --noEmit",
+    "benchmark": "npm run build --silent && node dist/src/cli.js",
+    "test": "node ../../validate-fixtures.mjs && npm run build --silent && node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@langchain/core": "1.2.9",
+    "@langchain/langgraph": "1.4.13",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "typescript": "7.0.2"
+  }
+}
