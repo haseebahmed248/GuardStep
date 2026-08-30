@@ -1,38 +1,85 @@
-// Draft GuardStep syntax. This example is not executable yet.
+// Standalone GuardStep syntax proposal. This file is not executable yet.
+
+enum AnswerStatus {
+  answered
+  insufficient_context
+}
+
+enum FailureCode {
+  CAPABILITY_DENIED
+  SEARCH_TIMEOUT
+  MODEL_OUTPUT_INVALID
+  CITATION_REQUIRED
+  CITATION_FORBIDDEN
+  CITATION_UNKNOWN
+  COST_LIMIT_EXCEEDED
+  DURATION_LIMIT_EXCEEDED
+}
 
 record Question {
-  text: String
+  question: String
 }
 
 record Citation {
+  document_id: String
   title: String
-  url: String
+  url: Url
 }
 
 record Document {
+  id: String
   title: String
-  url: String
+  url: Url
   content: String
 }
 
 record Answer {
+  status: AnswerStatus
   text: String
   citations: List<Citation>
 }
 
-tool documents.search(query: String) -> List<Document>
+tool documents.search(question: String) -> List<Document>
 
-workflow AnswerQuestion(input: Question) -> Answer {
-  allow tools [documents.search]
-  limit cost <= 0.05 USD
-  limit duration <= 20s
-
-  context = call documents.search(query: input.text)
-
-  answer = generate Answer using model("balanced") {
-    "Answer using only the supplied context: {context}"
+workflow AnswerQuestion(input: Question) -> Answer fails FailureCode {
+  capabilities {
+    documents.search else CAPABILITY_DENIED
   }
 
-  require answer.citations.length > 0
+  limits {
+    tool_calls <= 1
+    model_calls <= 1
+    duration <= 20s else DURATION_LIMIT_EXCEEDED
+    cost <= 0.05 USD else COST_LIMIT_EXCEEDED
+  }
+
+  documents = call documents.search(question: input.question)
+    on timeout => fail SEARCH_TIMEOUT
+
+  answer = generate Answer using model("balanced") {
+    instructions: """
+      Answer the question using only the supplied documents.
+      Return answered only when the documents support the answer.
+      Return insufficient_context when the documents do not support an answer.
+      For an answered result, copy every citation ID, title, and URL from a supplied document.
+    """
+    context: {
+      question: input.question
+      documents: documents
+    }
+  } on invalid => fail MODEL_OUTPUT_INVALID
+
+  require answer.status != answered || answer.citations.length > 0
+    else CITATION_REQUIRED
+
+  require answer.status != insufficient_context || answer.citations.length == 0
+    else CITATION_FORBIDDEN
+
+  require answer.citations.every(citation => documents.any(document =>
+    document.id == citation.document_id &&
+    document.title == citation.title &&
+    document.url == citation.url
+  )) else CITATION_UNKNOWN
+
   return answer
 }

@@ -1,6 +1,6 @@
 # GuardStep architecture proposal
 
-Status: proposal. None of the components below has been implemented.
+Status: proposal. None of the components below has been implemented. The source pipeline shown here describes the standalone-language option; the [syntax comparison](SYNTAX.md) also evaluates an embedded TypeScript API that would change the frontend and tooling layers while targeting the same IR.
 
 ## System shape
 
