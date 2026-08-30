@@ -5,7 +5,7 @@ const loadJson = (relativePath) =>
 
 const corpus = loadJson("fixtures/documents.json");
 const fixture = loadJson("fixtures/scenarios.json");
-const eventSchema = loadJson("schemas/event.schema.json");
+const eventSchema = loadJson("../../schemas/execution-event.v1.schema.json");
 
 const errors = [];
 const check = (condition, message) => {
@@ -69,7 +69,7 @@ for (const document of documents) {
 }
 
 const documentById = new Map(documents.map((document) => [document.id, document]));
-const allowedEvents = new Set(eventSchema.properties.type.enum);
+const allowedEvents = new Set(eventSchema.$defs.envelope.properties.type.enum);
 
 check(fixture.schema_version === 1, "scenarios: schema_version must be 1");
 check(Array.isArray(fixture.scenarios), "scenarios: scenarios must be an array");
@@ -158,7 +158,10 @@ for (const scenario of scenarios) {
       `${label}: final event must terminate the run`,
     );
     for (const event of events) {
-      check(allowedEvents.has(event), `${label}: event ${event} is not in event.schema.json`);
+      check(
+        allowedEvents.has(event),
+        `${label}: event ${event} is not in execution-event.v1.schema.json`,
+      );
     }
     check(
       !(modelNotReached && events.includes("model.started")),

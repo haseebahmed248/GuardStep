@@ -70,7 +70,7 @@ The immediate goal is to validate the language with three real applications befo
 2. A support workflow with tools and human approval
 3. A mobile application consuming a streaming AI workflow
 
-See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), and [roadmap](docs/ROADMAP.md).
+See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), [execution event model](docs/EXECUTION-EVENTS.md), and [roadmap](docs/ROADMAP.md).
 
 ## Open source
 

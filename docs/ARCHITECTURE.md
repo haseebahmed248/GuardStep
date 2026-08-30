@@ -92,7 +92,7 @@ Model calls, tool calls, clocks, randomness, approvals, and external I/O are eff
 
 ### Streaming
 
-The runtime produces a typed event stream separate from the final workflow result. A client can disconnect and resume from a cursor when the backing runtime supports persisted events.
+The runtime produces a typed event stream separate from the final workflow result. The Stage 0 [minimum execution event model](EXECUTION-EVENTS.md) defines portable lifecycle events and redaction rules. Typed application streaming, persisted cursors, disconnects, and resume behavior remain later runtime work.
 
 ### Idempotency
 
