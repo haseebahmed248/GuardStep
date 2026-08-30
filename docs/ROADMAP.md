@@ -6,7 +6,7 @@ Dates are intentionally omitted until the validation work measures the scope.
 
 - Write three reference application requirements independent of any framework. The first is the [document Q&A benchmark](../benchmarks/document-qa/README.md).
 - Implement document Q&A in plain TypeScript, BAML, and either LangGraph or Pydantic AI.
-- Draft at least two competing syntax styles.
+- Draft and compare [at least two competing syntax styles](SYNTAX.md).
 - Specify the minimum execution event model.
 - Decide whether a standalone language beats an embedded TypeScript API.
 

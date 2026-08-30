@@ -31,7 +31,7 @@ workflow AnswerQuestion(input: Question) -> Answer {
 }
 ```
 
-The syntax above is illustrative, not a committed specification. See the complete [document Q&A example](examples/document-qa/answer.guard) and the accompanying [syntax sketch](docs/SYNTAX.md).
+The syntax above is illustrative, not a committed specification. Stage 0 now compares a complete [standalone document Q&A draft](examples/document-qa/answer.guard) with an [embedded TypeScript draft](examples/document-qa/answer.workflow.ts); see the [syntax options](docs/SYNTAX.md) for their shared semantics and tradeoffs.
 
 ## Name
 
@@ -70,7 +70,7 @@ The immediate goal is to validate the language with three real applications befo
 2. A support workflow with tools and human approval
 3. A mobile application consuming a streaming AI workflow
 
-See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax sketch](docs/SYNTAX.md), and [roadmap](docs/ROADMAP.md).
+See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), and [roadmap](docs/ROADMAP.md).
 
 ## Open source
 
