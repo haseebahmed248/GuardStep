@@ -8,6 +8,7 @@ This benchmark compares how different implementations express and enforce the sa
 
 - [Plain TypeScript baseline](implementations/typescript/README.md)
 - [BAML with TypeScript orchestration](implementations/baml/README.md)
+- [LangGraph with TypeScript](implementations/langgraph/README.md)
 
 The conformance suite is deterministic. It uses the documents and effect responses in [`fixtures`](fixtures/) instead of a live search service or model. Live-provider evaluation may be added later, but its results must be reported separately.
 
