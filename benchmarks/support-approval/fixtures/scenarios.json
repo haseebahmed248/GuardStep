@@ -1,0 +1,931 @@
+{
+  "schema_version": 1,
+  "budgets": {
+    "tool_calls": 2,
+    "model_calls": 1,
+    "active_duration_ms": 20000,
+    "approval_expires_after_ms": 86400000,
+    "cost": {
+      "currency": "USD",
+      "maximum": 0.05
+    }
+  },
+  "pricing": {
+    "input_usd_per_million": 1,
+    "output_usd_per_million": 2
+  },
+  "scenarios": [
+    {
+      "id": "respond-only",
+      "input": {
+        "ticket_id": "ticket-100",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "How can Sam enroll a new authenticator?"
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "respond_only",
+          "reason": "The request only needs enrollment instructions.",
+          "message": "Ask Sam to open Security settings and choose Add authenticator."
+        }
+      },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "succeeded",
+          "output": {
+            "status": "responded",
+            "ticket_id": "ticket-100",
+            "action": "none",
+            "message": "Ask Sam to open Security settings and choose Add authenticator.",
+            "operation_id": null
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "run.succeeded"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "disable-mfa-pending",
+      "input": {
+        "ticket_id": "ticket-101",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-101",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": null
+      },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-disable-mfa-pending",
+            "approval": {
+              "approval_id": "approval-101",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "disable-mfa-approved",
+      "input": {
+        "ticket_id": "ticket-102",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": ["support.account.disable_mfa"],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-102",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": {
+          "kind": "signal",
+          "value": {
+            "run_id": "run-disable-mfa-approved",
+            "approval_id": "approval-102",
+            "step_id": "approval:disable-mfa",
+            "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+            "outcome": "approved",
+            "approver": { "user_id": "owner-1", "roles": ["workspace_owner"] }
+          }
+        }
+      },
+      "mutation": {
+        "behavior": "return",
+        "elapsed_ms": 300,
+        "result": {
+          "workspace_id": "ws-acme",
+          "target_user_id": "user-42",
+          "operation_id": "operation-102"
+        }
+      },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-disable-mfa-approved",
+            "approval": {
+              "approval_id": "approval-102",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "succeeded",
+          "output": {
+            "status": "executed",
+            "ticket_id": "ticket-102",
+            "action": "disable_mfa",
+            "message": "MFA reset requested for Sam Rivera.",
+            "operation_id": "operation-102"
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended",
+            "run.resumed", "approval.resolved", "capability.checked", "tool.started",
+            "tool.succeeded", "run.succeeded"
+          ]
+        },
+        "replay": {
+          "status": "succeeded",
+          "returns_stored_output": true,
+          "new_events": [],
+          "additional_mutation_calls": 0
+        },
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 1
+      }
+    },
+    {
+      "id": "disable-mfa-denied",
+      "input": {
+        "ticket_id": "ticket-103",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-103",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": {
+          "kind": "signal",
+          "value": {
+            "run_id": "run-disable-mfa-denied",
+            "approval_id": "approval-103",
+            "step_id": "approval:disable-mfa",
+            "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+            "outcome": "denied",
+            "approver": { "user_id": "owner-1", "roles": ["workspace_owner"] }
+          }
+        }
+      },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-disable-mfa-denied",
+            "approval": {
+              "approval_id": "approval-103",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "succeeded",
+          "output": {
+            "status": "declined",
+            "ticket_id": "ticket-103",
+            "action": "disable_mfa",
+            "message": "The workspace owner declined the MFA reset.",
+            "operation_id": null
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended",
+            "run.resumed", "approval.resolved", "run.succeeded"
+          ]
+        },
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "approval-expired",
+      "input": {
+        "ticket_id": "ticket-104",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-104",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": { "kind": "expired" }
+      },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-approval-expired",
+            "approval": {
+              "approval_id": "approval-104",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "failed",
+          "error_code": "APPROVAL_EXPIRED",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended",
+            "run.resumed", "approval.resolved", "run.failed"
+          ]
+        },
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "read-capability-denied",
+      "input": {
+        "ticket_id": "ticket-105",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "How can Sam enroll a new authenticator?"
+      },
+      "initial_granted_capabilities": [],
+      "resume_granted_capabilities": [],
+      "lookup": { "behavior": "not_reached" },
+      "model": { "behavior": "not_reached" },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "failed",
+          "error_code": "CAPABILITY_DENIED",
+          "required_events": ["run.started", "capability.checked", "run.failed"]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 0,
+        "model_calls": 0,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "lookup-timeout",
+      "input": {
+        "ticket_id": "ticket-106",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "How can Sam enroll a new authenticator?"
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": { "behavior": "timeout", "elapsed_ms": 2000 },
+      "model": { "behavior": "not_reached" },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "failed",
+          "error_code": "ACCOUNT_LOOKUP_TIMEOUT",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.failed", "run.failed"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 0,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "account-context-mismatch",
+      "input": {
+        "ticket_id": "ticket-107",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "How can Sam enroll a new authenticator?"
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-77"
+      },
+      "model": { "behavior": "not_reached" },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "failed",
+          "error_code": "ACCOUNT_CONTEXT_MISMATCH",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "assertion.failed", "run.failed"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 0,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "model-output-invalid",
+      "input": {
+        "ticket_id": "ticket-108",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "How can Sam enroll a new authenticator?"
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "remove_account",
+          "message": "Delete the account."
+        }
+      },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "failed",
+          "error_code": "MODEL_OUTPUT_INVALID",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "assertion.failed", "run.failed"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "mutation-capability-denied",
+      "input": {
+        "ticket_id": "ticket-109",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-109",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": {
+          "kind": "signal",
+          "value": {
+            "run_id": "run-mutation-capability-denied",
+            "approval_id": "approval-109",
+            "step_id": "approval:disable-mfa",
+            "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+            "outcome": "approved",
+            "approver": { "user_id": "owner-1", "roles": ["workspace_owner"] }
+          }
+        }
+      },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-mutation-capability-denied",
+            "approval": {
+              "approval_id": "approval-109",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "failed",
+          "error_code": "CAPABILITY_DENIED",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended",
+            "run.resumed", "approval.resolved", "capability.checked", "run.failed"
+          ]
+        },
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "mutation-timeout",
+      "input": {
+        "ticket_id": "ticket-110",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": ["support.account.disable_mfa"],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-110",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": {
+          "kind": "signal",
+          "value": {
+            "run_id": "run-mutation-timeout",
+            "approval_id": "approval-110",
+            "step_id": "approval:disable-mfa",
+            "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+            "outcome": "approved",
+            "approver": { "user_id": "owner-1", "roles": ["workspace_owner"] }
+          }
+        }
+      },
+      "mutation": { "behavior": "timeout", "elapsed_ms": 2000 },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-mutation-timeout",
+            "approval": {
+              "approval_id": "approval-110",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "failed",
+          "error_code": "MUTATION_TIMEOUT",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended",
+            "run.resumed", "approval.resolved", "capability.checked", "tool.started",
+            "tool.failed", "run.failed"
+          ]
+        },
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 1
+      }
+    },
+    {
+      "id": "mutation-result-mismatch",
+      "input": {
+        "ticket_id": "ticket-111",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": ["support.account.disable_mfa"],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-111",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": {
+          "kind": "signal",
+          "value": {
+            "run_id": "run-mutation-result-mismatch",
+            "approval_id": "approval-111",
+            "step_id": "approval:disable-mfa",
+            "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+            "outcome": "approved",
+            "approver": { "user_id": "owner-1", "roles": ["workspace_owner"] }
+          }
+        }
+      },
+      "mutation": {
+        "behavior": "return",
+        "elapsed_ms": 300,
+        "result": {
+          "workspace_id": "ws-acme",
+          "target_user_id": "user-77",
+          "operation_id": "operation-111"
+        }
+      },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-mutation-result-mismatch",
+            "approval": {
+              "approval_id": "approval-111",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "failed",
+          "error_code": "MUTATION_RESULT_MISMATCH",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended",
+            "run.resumed", "approval.resolved", "capability.checked", "tool.started",
+            "tool.succeeded", "assertion.failed", "run.failed"
+          ]
+        },
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 1
+      }
+    },
+    {
+      "id": "cost-limit-exceeded",
+      "input": {
+        "ticket_id": "ticket-112",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 20000, "output_tokens": 20000 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "failed",
+          "error_code": "COST_LIMIT_EXCEEDED",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "budget.exceeded", "run.failed"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "duration-limit-exceeded",
+      "input": {
+        "ticket_id": "ticket-113",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": [],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 5000,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 16000,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": { "behavior": "not_reached" },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "failed",
+          "error_code": "DURATION_LIMIT_EXCEEDED",
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "budget.exceeded", "run.failed"
+          ]
+        },
+        "resume": null,
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    },
+    {
+      "id": "resume-binding-mismatch",
+      "input": {
+        "ticket_id": "ticket-114",
+        "workspace_id": "ws-acme",
+        "target_user_id": "user-42",
+        "request_text": "Please disable Sam's MFA because the phone was lost."
+      },
+      "initial_granted_capabilities": ["support.account.read"],
+      "resume_granted_capabilities": ["support.account.disable_mfa"],
+      "lookup": {
+        "behavior": "return",
+        "elapsed_ms": 400,
+        "account_key": "ws-acme/user-42"
+      },
+      "model": {
+        "behavior": "return",
+        "elapsed_ms": 700,
+        "usage": { "input_tokens": 1000, "output_tokens": 500 },
+        "output": {
+          "action": "disable_mfa",
+          "reason": "The user cannot access the registered authenticator.",
+          "message": "MFA reset requested for Sam Rivera."
+        }
+      },
+      "approval": {
+        "behavior": "pending",
+        "approval_id": "approval-114",
+        "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+        "resume": {
+          "kind": "signal",
+          "value": {
+            "run_id": "run-resume-binding-mismatch",
+            "approval_id": "approval-114",
+            "step_id": "approval:disable-mfa",
+            "plan_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "outcome": "approved",
+            "approver": { "user_id": "owner-1", "roles": ["workspace_owner"] }
+          }
+        }
+      },
+      "mutation": { "behavior": "not_reached" },
+      "expect": {
+        "initial": {
+          "status": "suspended",
+          "suspension": {
+            "status": "suspended",
+            "run_id": "run-resume-binding-mismatch",
+            "approval": {
+              "approval_id": "approval-114",
+              "step_id": "approval:disable-mfa",
+              "action": "disable_mfa",
+              "workspace_id": "ws-acme",
+              "target_user_id": "user-42",
+              "requested_role": "workspace_owner",
+              "summary": "Disable MFA for user-42 in workspace ws-acme.",
+              "plan_digest": "sha256:953642656cd0bd9cbfb3c7cf79362915b5410a0eab4bf6e620a6e57e29f4cc73",
+              "expires_after_ms": 86400000
+            }
+          },
+          "required_events": [
+            "run.started", "capability.checked", "tool.started", "tool.succeeded",
+            "model.started", "model.succeeded", "approval.requested", "run.suspended"
+          ]
+        },
+        "resume": {
+          "status": "rejected",
+          "run_status": "suspended",
+          "error_code": "APPROVAL_SIGNAL_INVALID",
+          "required_events": []
+        },
+        "replay": null,
+        "lookup_calls": 1,
+        "model_calls": 1,
+        "mutation_calls": 0
+      }
+    }
+  ]
+}

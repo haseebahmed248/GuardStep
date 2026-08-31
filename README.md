@@ -67,7 +67,7 @@ Canonical naming:
 The immediate goal is to validate the language with three real applications before freezing syntax:
 
 1. A [document question-answering benchmark](benchmarks/document-qa/README.md)
-2. A support workflow with tools and human approval
+2. A [support workflow with tools and human approval](benchmarks/support-approval/README.md)
 3. A mobile application consuming a streaming AI workflow
 
 See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), [execution event model](docs/EXECUTION-EVENTS.md), and [roadmap](docs/ROADMAP.md).
