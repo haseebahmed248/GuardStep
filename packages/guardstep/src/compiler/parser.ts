@@ -138,7 +138,10 @@ export class Parser {
       failures: failures.value,
       capabilities,
       limits,
-      steps,
+      steps: steps.map((step) => ({
+        ...step,
+        step_id: `${name.value}/${step.step_id}`,
+      })),
       source: this.range(start, end),
     };
   }
@@ -234,7 +237,7 @@ export class Parser {
     const invalidFailure = this.consumeKind("identifier", "Expected invalid-output failure code");
     return {
       kind: "tool",
-      step_id: `tool:${tool}`,
+      step_id: `tool:${assign.value}`,
       assign: assign.value,
       tool,
       arguments: argumentsMap,
@@ -281,7 +284,7 @@ export class Parser {
     const failure = this.consumeKind("identifier", "Expected invalid-output failure code");
     return {
       kind: "model",
-      step_id: `model:${profile.value}`,
+      step_id: `model:${assign.value}`,
       assign: assign.value,
       output_type: outputType.value,
       profile: profile.value,
@@ -299,7 +302,7 @@ export class Parser {
     const failure = this.consumeKind("identifier", "Expected assertion failure code");
     return {
       kind: "assertion",
-      step_id: `assertion:${failure.value}`,
+      step_id: `assertion:${failure.value}:${start.range.start.line}`,
       condition,
       error: failure.value,
       source: this.range(start, failure),

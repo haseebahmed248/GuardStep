@@ -10,6 +10,7 @@
   },
   "exports": {
     ".": "./dist/index.js",
+    "./codegen": "./dist/codegen/index.js",
     "./compiler": "./dist/compiler/index.js",
     "./runtime": "./dist/runtime/index.js",
     "./ir": "./dist/ir/index.js",
