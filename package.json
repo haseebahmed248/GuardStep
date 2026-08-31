@@ -1,0 +1,23 @@
+{
+  "name": "guardstep-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace guardstep",
+    "check": "npm run check --workspace guardstep",
+    "test": "npm run test --workspace guardstep",
+    "guardstep": "node packages/guardstep/dist/cli/main.js",
+    "gs": "node packages/guardstep/dist/cli/main.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "typescript": "7.0.2"
+  }
+}

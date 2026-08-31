@@ -1,4 +1,4 @@
-// Standalone GuardStep syntax proposal. This file is not executable yet.
+// Executable GuardStep document Q&A workflow.
 
 enum AnswerStatus {
   answered
@@ -8,6 +8,9 @@ enum AnswerStatus {
 enum FailureCode {
   CAPABILITY_DENIED
   SEARCH_TIMEOUT
+  TOOL_CALL_FAILED
+  TOOL_OUTPUT_INVALID
+  MODEL_CALL_FAILED
   MODEL_OUTPUT_INVALID
   CITATION_REQUIRED
   CITATION_FORBIDDEN
@@ -55,19 +58,24 @@ workflow AnswerQuestion(input: Question) -> Answer fails FailureCode {
 
   documents = call documents.search(question: input.question)
     on timeout => fail SEARCH_TIMEOUT
+    on error => fail TOOL_CALL_FAILED
+    on invalid => fail TOOL_OUTPUT_INVALID
 
   answer = generate Answer using model("balanced") {
     instructions: """
       Answer the question using only the supplied documents.
-      Return answered only when the documents support the answer.
-      Return insufficient_context when the documents do not support an answer.
+      Return status 'answered' only when the documents support an answer.
+      Return status 'insufficient_context' when the documents do not support an answer.
       For an answered result, copy every citation ID, title, and URL from a supplied document.
+      Return a value that matches the supplied JSON Schema.
     """
     context: {
       question: input.question
       documents: documents
     }
-  } on invalid => fail MODEL_OUTPUT_INVALID
+  }
+    on error => fail MODEL_CALL_FAILED
+    on invalid => fail MODEL_OUTPUT_INVALID
 
   require answer.status != answered || answer.citations.length > 0
     else CITATION_REQUIRED

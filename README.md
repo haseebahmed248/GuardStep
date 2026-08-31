@@ -7,9 +7,22 @@
 
 <p align="center"><strong>AI workflows, one guarded step at a time.</strong></p>
 
-GuardStep is a proposed open-source language for AI workflows. A GuardStep file is intended to declare data contracts, model calls, tool access, budgets, approval points, and failure conditions in one place.
+GuardStep is an experimental open-source language for AI workflows. A GuardStep file declares data contracts, model calls, tool access, budgets, approval points, and failure conditions in one place.
 
-There is no compiler or runtime yet. The repository contains research, design notes, and draft syntax.
+The repository now contains an executable alpha vertical slice: the CLI parses and checks the document-Q&A workflow, compiles it to versioned IR, runs it with deployment-owned adapters, and passes the 11-scenario conformance suite. It is not ready for production use.
+
+## Try it
+
+```bash
+npm install
+npm run build
+./gs check examples/document-qa/answer.guard
+./gs compile examples/document-qa/answer.guard
+./gs run examples/document-qa/answer.guard
+./gs test examples/document-qa/answer.guard
+```
+
+The short `gs` wrapper is for repository development. Installed packages expose both `guardstep` and `gs`. See the [CLI alpha documentation](packages/guardstep/README.md).
 
 ## The idea
 
@@ -31,7 +44,7 @@ workflow AnswerQuestion(input: Question) -> Answer {
 }
 ```
 
-The syntax above is illustrative, not a committed specification. Stage 0 now compares a complete [standalone document Q&A draft](examples/document-qa/answer.guard) with an [embedded TypeScript draft](examples/document-qa/answer.workflow.ts); see the [syntax options](docs/SYNTAX.md) for their shared semantics and tradeoffs.
+The syntax above is illustrative, not a committed specification. The executable [standalone document Q&A workflow](examples/document-qa/answer.guard) is the current Stage 1 subset; the [embedded TypeScript draft](examples/document-qa/answer.workflow.ts) remains design evidence. See the [syntax options](docs/SYNTAX.md) for their shared semantics and tradeoffs.
 
 ## Name
 
@@ -64,7 +77,7 @@ Canonical naming:
 
 ## Current work
 
-The immediate goal is to validate the language with three real applications before freezing syntax:
+Stage 0 defined three reference applications before freezing syntax:
 
 1. A [document question-answering benchmark](benchmarks/document-qa/README.md)
 2. A [support workflow with tools and human approval](benchmarks/support-approval/README.md)
@@ -72,7 +85,7 @@ The immediate goal is to validate the language with three real applications befo
 
 See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), [execution event model](docs/EXECUTION-EVENTS.md), and [roadmap](docs/ROADMAP.md).
 
-The [Stage 0 evidence report](docs/STAGE-0-REPORT.md) records the reproducible framework comparison and the provisional decision to test a standalone `.guard` compiler in Stage 1.
+The [Stage 0 evidence report](docs/STAGE-0-REPORT.md) records the reproducible framework comparison and the decision to test a standalone `.guard` compiler in Stage 1. The current implementation is that first executable test.
 
 ## Open source
 
