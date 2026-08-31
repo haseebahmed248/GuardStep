@@ -18,6 +18,7 @@ npm install
 npm run build
 ./gs check examples/document-qa/answer.guard
 ./gs compile examples/document-qa/answer.guard
+./gs generate examples/document-qa/answer.guard
 ./gs run examples/document-qa/answer.guard
 ./gs test examples/document-qa/answer.guard
 ```

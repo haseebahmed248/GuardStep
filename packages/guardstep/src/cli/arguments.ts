@@ -4,6 +4,12 @@ export type ParsedCommand =
   | { readonly command: "check"; readonly sourcePath?: string }
   | { readonly command: "compile"; readonly sourcePath?: string; readonly outputPath?: string }
   | {
+      readonly command: "generate";
+      readonly sourcePath?: string;
+      readonly outputPath?: string;
+      readonly check: boolean;
+    }
+  | {
       readonly command: "run";
       readonly sourcePath?: string;
       readonly inputPath?: string;
@@ -26,7 +32,9 @@ export const parseArguments = (argumentsValue: readonly string[]): ParsedCommand
   if (command === "version" || command === "--version" || command === "-v") {
     return { command: "version" };
   }
-  if (!["check", "compile", "run", "test"].includes(command)) throw new Error(`Unknown command: ${command}`);
+  if (!["check", "compile", "generate", "run", "test"].includes(command)) {
+    throw new Error(`Unknown command: ${command}`);
+  }
   const hasSourcePath = sourcePath !== undefined && !sourcePath.startsWith("-");
 
   if (command === "check") {
@@ -41,11 +49,17 @@ export const parseArguments = (argumentsValue: readonly string[]): ParsedCommand
   let inputPath: string | undefined;
   let hostPath: string | undefined;
   let workflow: string | undefined;
+  let checkGenerated = false;
   for (let index = hasSourcePath ? 2 : 1; index < argumentsValue.length; index += 1) {
     const flag = argumentsValue[index]!;
     if ((flag === "--out" || flag === "-o") && command === "compile") {
       outputPath = valueAfter(argumentsValue, index, flag);
       index += 1;
+    } else if ((flag === "--out" || flag === "-o") && command === "generate") {
+      outputPath = valueAfter(argumentsValue, index, flag);
+      index += 1;
+    } else if (flag === "--check" && command === "generate") {
+      checkGenerated = true;
     } else if (flag === "--suite" && command === "test") {
       suitePath = valueAfter(argumentsValue, index, flag);
       index += 1;
@@ -66,6 +80,14 @@ export const parseArguments = (argumentsValue: readonly string[]): ParsedCommand
   if (command === "compile") {
     return {
       command,
+      ...(hasSourcePath ? { sourcePath } : {}),
+      ...(outputPath === undefined ? {} : { outputPath }),
+    };
+  }
+  if (command === "generate") {
+    return {
+      command,
+      check: checkGenerated,
       ...(hasSourcePath ? { sourcePath } : {}),
       ...(outputPath === undefined ? {} : { outputPath }),
     };

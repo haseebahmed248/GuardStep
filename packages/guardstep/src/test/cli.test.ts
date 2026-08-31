@@ -37,6 +37,36 @@ test("compile writes valid versioned IR atomically", () => {
   }
 });
 
+test("generate writes contracts and detects stale output", () => {
+  const directory = mkdtempSync(join(tmpdir(), "guardstep-generate-"));
+  try {
+    const outputPath = join(directory, "answer.generated.ts");
+    const generated = runCli(["generate", sourcePath, "--out", outputPath]);
+    assert.equal(generated.status, 0, generated.stderr);
+    assert.match(readFileSync(outputPath, "utf8"), /export interface GuardStepHost/);
+
+    const unchanged = runCli(["generate", sourcePath, "--out", outputPath]);
+    assert.equal(unchanged.status, 0, unchanged.stderr);
+    assert.match(unchanged.stdout, /Unchanged/);
+
+    const current = runCli(["generate", sourcePath, "--out", outputPath, "--check"]);
+    assert.equal(current.status, 0, current.stderr);
+
+    writeFileSync(outputPath, "// stale\n", "utf8");
+    const stale = runCli(["generate", sourcePath, "--out", outputPath, "--check"]);
+    assert.equal(stale.status, 1);
+    assert.match(stale.stderr, /missing or stale/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("generate check discovers conventional files", () => {
+  const result = runCli(["generate", "--check"], exampleDirectory);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /contracts are current/);
+});
+
 test("test executes all document Q&A scenarios through compiled GuardStep", () => {
   const result = runCli(["test", sourcePath]);
   assert.equal(result.status, 0, result.stderr);

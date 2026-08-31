@@ -4,6 +4,7 @@ import { extname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { compileSource } from "../compiler/index.js";
+import { generateTypeScript } from "../codegen/index.js";
 import { executeWorkflow } from "../runtime/index.js";
 import type { WorkflowHost } from "../runtime/index.js";
 import type { GuardTestSuite } from "../testing/index.js";
@@ -38,6 +39,31 @@ export const compileCommand = (
     writeFileAtomic(outputPath, serialized);
     context.stdout(`Wrote ${outputPath}`);
   }
+};
+
+export const generateCommand = (
+  sourcePath: string,
+  outputPath: string | undefined,
+  check: boolean,
+  context: CommandContext,
+): void => {
+  const { ir } = compilePath(sourcePath);
+  const target = resolve(outputPath ?? neighboringPath(sourcePath, ".generated.ts"));
+  const generated = generateTypeScript(ir);
+  const current = existsSync(target) ? readFileSync(target, "utf8") : undefined;
+  if (check) {
+    if (current !== generated) {
+      throw new Error(`Generated contracts are missing or stale: ${target}`);
+    }
+    context.stdout(`Generated contracts are current: ${target}`);
+    return;
+  }
+  if (current === generated) {
+    context.stdout(`Unchanged ${target}`);
+    return;
+  }
+  writeFileAtomic(target, generated);
+  context.stdout(`Wrote ${target}`);
 };
 
 const defaultSuitePath = (sourcePath: string): string => {

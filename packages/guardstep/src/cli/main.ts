@@ -4,15 +4,16 @@ import { readFileSync } from "node:fs";
 
 import { formatDiagnostic, GuardStepDiagnosticError } from "../compiler/index.js";
 import { parseArguments } from "./arguments.js";
-import { checkCommand, compileCommand, runCommand, testCommand } from "./commands.js";
+import { checkCommand, compileCommand, generateCommand, runCommand, testCommand } from "./commands.js";
 import { resolveSourcePath } from "./io.js";
+import { GUARDSTEP_VERSION } from "../version.js";
 
-const VERSION = "0.1.0-alpha.1";
-const HELP = `GuardStep ${VERSION}
+const HELP = `GuardStep ${GUARDSTEP_VERSION}
 
 Usage:
   gs check [workflow.guard]
   gs compile [workflow.guard] [--out workflow.ir.json]
+  gs generate [workflow.guard] [--out workflow.generated.ts] [--check]
   gs run [workflow.guard] [--input input.json] [--host workflow.host.mjs]
   gs test [workflow.guard] [--suite workflow.test.mjs]
   guardstep version
@@ -32,7 +33,7 @@ const main = async (): Promise<void> => {
     return;
   }
   if (command.command === "version") {
-    context.stdout(VERSION);
+    context.stdout(GUARDSTEP_VERSION);
     return;
   }
   if (command.command === "check") {
@@ -41,6 +42,15 @@ const main = async (): Promise<void> => {
   }
   if (command.command === "compile") {
     compileCommand(resolveSourcePath(command.sourcePath), command.outputPath, context);
+    return;
+  }
+  if (command.command === "generate") {
+    generateCommand(
+      resolveSourcePath(command.sourcePath),
+      command.outputPath,
+      command.check,
+      context,
+    );
     return;
   }
   if (command.command === "run") {
