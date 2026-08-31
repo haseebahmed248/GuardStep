@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:support-approval:output:1",
+  "title": "Support approval result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "ticket_id", "action", "message", "operation_id"],
+  "properties": {
+    "status": {
+      "enum": ["responded", "executed", "declined"]
+    },
+    "ticket_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "enum": ["none", "disable_mfa"]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation_id": {
+      "type": ["string", "null"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "responded" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "action": { "const": "none" },
+          "operation_id": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "executed" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "action": { "const": "disable_mfa" },
+          "operation_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "declined" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "action": { "const": "disable_mfa" },
+          "operation_id": { "type": "null" }
+        }
+      }
+    }
+  ]
+}

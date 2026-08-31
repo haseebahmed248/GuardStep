@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:support-approval:suspension:1",
+  "title": "Support approval suspension",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "run_id", "approval"],
+  "properties": {
+    "status": { "const": "suspended" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approval_id",
+        "step_id",
+        "action",
+        "workspace_id",
+        "target_user_id",
+        "requested_role",
+        "summary",
+        "plan_digest",
+        "expires_after_ms"
+      ],
+      "properties": {
+        "approval_id": { "type": "string", "minLength": 1 },
+        "step_id": { "const": "approval:disable-mfa" },
+        "action": { "const": "disable_mfa" },
+        "workspace_id": { "type": "string", "minLength": 1 },
+        "target_user_id": { "type": "string", "minLength": 1 },
+        "requested_role": { "const": "workspace_owner" },
+        "summary": { "type": "string", "minLength": 1 },
+        "plan_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "expires_after_ms": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
