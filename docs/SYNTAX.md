@@ -238,4 +238,4 @@ The standalone option should win only if its static safety, portability, and rea
 - visibility and package boundaries; and
 - provider-specific extension syntax.
 
-These details should be tested with the support-approval and mobile-streaming requirements before either option is frozen.
+These details should be tested with the [support-approval](../benchmarks/support-approval/README.md) and [mobile-streaming](../benchmarks/mobile-streaming/README.md) requirements before either option is frozen.

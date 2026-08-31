@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:mobile-streaming:reconnect:1",
+  "title": "Mobile stream reconnect request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "after_cursor", "protocol_version"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "after_cursor": { "type": ["string", "null"] },
+    "protocol_version": { "type": "integer", "minimum": 1 }
+  }
+}

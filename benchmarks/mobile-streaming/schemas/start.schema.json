@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:mobile-streaming:start:1",
+  "title": "Accepted mobile stream",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "protocol_version", "first_cursor"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "protocol_version": { "const": 1 },
+    "first_cursor": { "type": "null" }
+  }
+}
