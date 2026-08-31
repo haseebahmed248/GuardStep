@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "id": "start-new-run",
+      "operation": "start",
+      "owner_id": "user-mobile-1",
+      "protocol_version": 1,
+      "input_run_id": "run-field-success",
+      "existing_request_run_id": null,
+      "input_overrides": {},
+      "expect": {
+        "status": "accepted",
+        "run_id": "run-field-success",
+        "existing": false,
+        "model_calls": 1
+      }
+    },
+    {
+      "id": "start-idempotent-retry",
+      "operation": "start",
+      "owner_id": "user-mobile-1",
+      "protocol_version": 1,
+      "input_run_id": "run-field-success",
+      "existing_request_run_id": "run-field-success",
+      "input_overrides": {},
+      "expect": {
+        "status": "accepted",
+        "run_id": "run-field-success",
+        "existing": true,
+        "model_calls": 1
+      }
+    },
+    {
+      "id": "start-request-id-conflict",
+      "operation": "start",
+      "owner_id": "user-mobile-1",
+      "protocol_version": 1,
+      "input_run_id": "run-field-success",
+      "existing_request_run_id": "run-field-success",
+      "input_overrides": { "report_text": "Changed text with the same request ID." },
+      "expect": {
+        "status": "rejected",
+        "error_code": "REQUEST_ID_CONFLICT",
+        "model_calls": 1
+      }
+    },
+    {
+      "id": "start-unsupported-protocol",
+      "operation": "start",
+      "owner_id": "user-mobile-1",
+      "protocol_version": 2,
+      "input_run_id": "run-field-success",
+      "existing_request_run_id": null,
+      "input_overrides": {},
+      "expect": {
+        "status": "rejected",
+        "error_code": "UNSUPPORTED_STREAM_VERSION",
+        "model_calls": 0
+      }
+    },
+    {
+      "id": "consume-uninterrupted",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1, 2, 3, 4, 5],
+      "expect": {
+        "status": "completed",
+        "applied_sequences": [0, 1, 2, 3, 4, 5],
+        "duplicates_ignored": 0,
+        "result_run_id": "run-field-success"
+      }
+    },
+    {
+      "id": "reconnect-after-cursor",
+      "operation": "reconnect",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "protocol_version": 1,
+      "after_cursor": "cursor-field-success-2",
+      "existing_sequences": [0, 1, 2],
+      "delivered_sequences": [3, 4, 5],
+      "expect": {
+        "status": "completed",
+        "applied_sequences": [0, 1, 2, 3, 4, 5],
+        "duplicates_ignored": 0,
+        "result_run_id": "run-field-success",
+        "model_calls": 1
+      }
+    },
+    {
+      "id": "duplicate-delivery",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1, 1, 2, 3, 4, 5],
+      "expect": {
+        "status": "completed",
+        "applied_sequences": [0, 1, 2, 3, 4, 5],
+        "duplicates_ignored": 1,
+        "result_run_id": "run-field-success"
+      }
+    },
+    {
+      "id": "duplicate-reconnect-boundary",
+      "operation": "reconnect",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "protocol_version": 1,
+      "after_cursor": "cursor-field-success-1",
+      "existing_sequences": [0, 1],
+      "delivered_sequences": [1, 2, 3, 4, 5],
+      "expect": {
+        "status": "completed",
+        "applied_sequences": [0, 1, 2, 3, 4, 5],
+        "duplicates_ignored": 1,
+        "result_run_id": "run-field-success",
+        "model_calls": 1
+      }
+    },
+    {
+      "id": "delivery-gap",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1, 3],
+      "expect": {
+        "status": "reconnect_required",
+        "applied_sequences": [0, 1],
+        "duplicates_ignored": 0,
+        "after_cursor": "cursor-field-success-1"
+      }
+    },
+    {
+      "id": "disconnect-does-not-cancel",
+      "operation": "disconnect",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1],
+      "expect": {
+        "status": "disconnected",
+        "applied_sequences": [0, 1],
+        "run_status": "succeeded",
+        "cancellation_requests": 0,
+        "model_calls": 1
+      }
+    },
+    {
+      "id": "cancel-active-run",
+      "operation": "cancel",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-cancelled",
+      "request_id": "cancel-502",
+      "reason": "user_requested",
+      "prior_cancellation_requests": 0,
+      "expect": {
+        "status": "accepted",
+        "run_status": "cancelled",
+        "new_terminal_events": 1,
+        "cancellation_requests": 1
+      }
+    },
+    {
+      "id": "cancel-idempotent-replay",
+      "operation": "cancel",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-cancelled",
+      "request_id": "cancel-502",
+      "reason": "user_requested",
+      "prior_cancellation_requests": 1,
+      "expect": {
+        "status": "accepted",
+        "run_status": "cancelled",
+        "new_terminal_events": 0,
+        "cancellation_requests": 1
+      }
+    },
+    {
+      "id": "consume-cancelled-terminal",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-cancelled",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1, 2],
+      "expect": {
+        "status": "cancelled",
+        "applied_sequences": [0, 1, 2],
+        "duplicates_ignored": 0
+      }
+    },
+    {
+      "id": "cancel-after-success",
+      "operation": "cancel",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "request_id": "cancel-late-501",
+      "reason": "user_requested",
+      "prior_cancellation_requests": 0,
+      "expect": {
+        "status": "rejected",
+        "error_code": "RUN_ALREADY_TERMINAL",
+        "new_terminal_events": 0,
+        "cancellation_requests": 0
+      }
+    },
+    {
+      "id": "reconnect-invalid-cursor",
+      "operation": "reconnect",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-field-success",
+      "protocol_version": 1,
+      "after_cursor": "cursor-does-not-exist",
+      "existing_sequences": [],
+      "delivered_sequences": [],
+      "expect": {
+        "status": "rejected",
+        "error_code": "CURSOR_INVALID",
+        "applied_sequences": []
+      }
+    },
+    {
+      "id": "reconnect-wrong-owner",
+      "operation": "reconnect",
+      "owner_id": "user-mobile-2",
+      "run_id": "run-field-success",
+      "protocol_version": 1,
+      "after_cursor": null,
+      "existing_sequences": [],
+      "delivered_sequences": [],
+      "expect": {
+        "status": "rejected",
+        "error_code": "RUN_NOT_FOUND",
+        "applied_sequences": []
+      }
+    },
+    {
+      "id": "invalid-stream-event-fails-run",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-stream-invalid",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1],
+      "expect": {
+        "status": "failed",
+        "error_code": "STREAM_EVENT_INVALID",
+        "applied_sequences": [0, 1],
+        "duplicates_ignored": 0
+      }
+    },
+    {
+      "id": "projection-mismatch-fails-run",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-projection-mismatch",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1, 2],
+      "expect": {
+        "status": "failed",
+        "error_code": "STREAM_PROJECTION_MISMATCH",
+        "applied_sequences": [0, 1, 2],
+        "duplicates_ignored": 0
+      }
+    },
+    {
+      "id": "model-failure-reaches-client",
+      "operation": "consume",
+      "owner_id": "user-mobile-1",
+      "run_id": "run-model-failed",
+      "existing_sequences": [],
+      "delivered_sequences": [0, 1],
+      "expect": {
+        "status": "failed",
+        "error_code": "MODEL_FAILED",
+        "applied_sequences": [0, 1],
+        "duplicates_ignored": 0
+      }
+    }
+  ]
+}

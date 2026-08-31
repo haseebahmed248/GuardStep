@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:mobile-streaming:cancel:1",
+  "title": "Mobile run cancellation request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "request_id", "reason"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "request_id": { "type": "string", "minLength": 1 },
+    "reason": { "const": "user_requested" }
+  }
+}

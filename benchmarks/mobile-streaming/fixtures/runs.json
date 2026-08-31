@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "retention_ms": 86400000,
+  "runs": [
+    {
+      "run_id": "run-field-success",
+      "owner_id": "user-mobile-1",
+      "input": {
+        "request_id": "request-field-1",
+        "report_id": "report-501",
+        "site_id": "site-north",
+        "report_text": "Drive motor reached 105 C. Safe limit is 90 C. There is an oil smell."
+      },
+      "model_calls": 1,
+      "source": { "behavior": "success" },
+      "messages": [
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-success",
+          "sequence": 0,
+          "cursor": "cursor-field-success-0",
+          "type": "run.started",
+          "data": { "workflow": "CreateFieldBriefing", "report_id": "report-501" }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-success",
+          "sequence": 1,
+          "cursor": "cursor-field-success-1",
+          "type": "briefing.summary_delta",
+          "data": { "text": "Motor temperature is above " }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-success",
+          "sequence": 2,
+          "cursor": "cursor-field-success-2",
+          "type": "briefing.summary_delta",
+          "data": { "text": "the stated safe range." }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-success",
+          "sequence": 3,
+          "cursor": "cursor-field-success-3",
+          "type": "briefing.finding",
+          "data": {
+            "finding_id": "finding-1",
+            "severity": "high",
+            "text": "Drive motor reported at 105 C against a 90 C limit."
+          }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-success",
+          "sequence": 4,
+          "cursor": "cursor-field-success-4",
+          "type": "briefing.action",
+          "data": {
+            "action_id": "action-1",
+            "priority": "immediate",
+            "text": "Stop the motor and have maintenance inspect cooling and lubrication."
+          }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-success",
+          "sequence": 5,
+          "cursor": "cursor-field-success-5",
+          "type": "run.succeeded",
+          "data": {
+            "result": {
+              "status": "completed",
+              "report_id": "report-501",
+              "summary": "Motor temperature is above the stated safe range.",
+              "findings": [
+                {
+                  "finding_id": "finding-1",
+                  "severity": "high",
+                  "text": "Drive motor reported at 105 C against a 90 C limit."
+                }
+              ],
+              "actions": [
+                {
+                  "action_id": "action-1",
+                  "priority": "immediate",
+                  "text": "Stop the motor and have maintenance inspect cooling and lubrication."
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "run-field-cancelled",
+      "owner_id": "user-mobile-1",
+      "input": {
+        "request_id": "request-field-2",
+        "report_id": "report-502",
+        "site_id": "site-south",
+        "report_text": "Battery enclosure feels hot and the display is flickering."
+      },
+      "model_calls": 1,
+      "source": { "behavior": "cancelled", "cancel_request_id": "cancel-502" },
+      "messages": [
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-cancelled",
+          "sequence": 0,
+          "cursor": "cursor-field-cancelled-0",
+          "type": "run.started",
+          "data": { "workflow": "CreateFieldBriefing", "report_id": "report-502" }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-cancelled",
+          "sequence": 1,
+          "cursor": "cursor-field-cancelled-1",
+          "type": "briefing.summary_delta",
+          "data": { "text": "Battery enclosure temperature requires review." }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-field-cancelled",
+          "sequence": 2,
+          "cursor": "cursor-field-cancelled-2",
+          "type": "run.cancelled",
+          "data": { "reason": "user_requested" }
+        }
+      ]
+    },
+    {
+      "run_id": "run-stream-invalid",
+      "owner_id": "user-mobile-1",
+      "input": {
+        "request_id": "request-field-3",
+        "report_id": "report-503",
+        "site_id": "site-east",
+        "report_text": "Pump vibration increased after restart."
+      },
+      "model_calls": 1,
+      "source": {
+        "behavior": "invalid_stream_event",
+        "rejected_event": {
+          "type": "briefing.finding",
+          "data": { "finding_id": "finding-bad", "severity": "critical", "text": "Vibration." }
+        }
+      },
+      "messages": [
+        {
+          "protocol_version": 1,
+          "run_id": "run-stream-invalid",
+          "sequence": 0,
+          "cursor": "cursor-stream-invalid-0",
+          "type": "run.started",
+          "data": { "workflow": "CreateFieldBriefing", "report_id": "report-503" }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-stream-invalid",
+          "sequence": 1,
+          "cursor": "cursor-stream-invalid-1",
+          "type": "run.failed",
+          "data": { "error_code": "STREAM_EVENT_INVALID" }
+        }
+      ]
+    },
+    {
+      "run_id": "run-projection-mismatch",
+      "owner_id": "user-mobile-1",
+      "input": {
+        "request_id": "request-field-4",
+        "report_id": "report-504",
+        "site_id": "site-west",
+        "report_text": "Conveyor stopped twice during the shift."
+      },
+      "model_calls": 1,
+      "source": {
+        "behavior": "projection_mismatch",
+        "rejected_result": {
+          "status": "completed",
+          "report_id": "report-504",
+          "summary": "A different summary.",
+          "findings": [],
+          "actions": []
+        }
+      },
+      "messages": [
+        {
+          "protocol_version": 1,
+          "run_id": "run-projection-mismatch",
+          "sequence": 0,
+          "cursor": "cursor-projection-mismatch-0",
+          "type": "run.started",
+          "data": { "workflow": "CreateFieldBriefing", "report_id": "report-504" }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-projection-mismatch",
+          "sequence": 1,
+          "cursor": "cursor-projection-mismatch-1",
+          "type": "briefing.summary_delta",
+          "data": { "text": "Conveyor interruptions require investigation." }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-projection-mismatch",
+          "sequence": 2,
+          "cursor": "cursor-projection-mismatch-2",
+          "type": "run.failed",
+          "data": { "error_code": "STREAM_PROJECTION_MISMATCH" }
+        }
+      ]
+    },
+    {
+      "run_id": "run-model-failed",
+      "owner_id": "user-mobile-1",
+      "input": {
+        "request_id": "request-field-5",
+        "report_id": "report-505",
+        "site_id": "site-north",
+        "report_text": "No response from the pressure sensor."
+      },
+      "model_calls": 1,
+      "source": { "behavior": "model_failed" },
+      "messages": [
+        {
+          "protocol_version": 1,
+          "run_id": "run-model-failed",
+          "sequence": 0,
+          "cursor": "cursor-model-failed-0",
+          "type": "run.started",
+          "data": { "workflow": "CreateFieldBriefing", "report_id": "report-505" }
+        },
+        {
+          "protocol_version": 1,
+          "run_id": "run-model-failed",
+          "sequence": 1,
+          "cursor": "cursor-model-failed-1",
+          "type": "run.failed",
+          "data": { "error_code": "MODEL_FAILED" }
+        }
+      ]
+    }
+  ]
+}

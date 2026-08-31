@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:mobile-streaming:stream-event:1",
+  "title": "Mobile stream event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol_version", "run_id", "sequence", "cursor", "type", "data"],
+  "properties": {
+    "protocol_version": { "const": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "cursor": { "type": "string", "minLength": 1 },
+    "type": {
+      "enum": [
+        "run.started",
+        "briefing.summary_delta",
+        "briefing.finding",
+        "briefing.action",
+        "run.succeeded",
+        "run.failed",
+        "run.cancelled"
+      ]
+    },
+    "data": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "run.started" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["workflow", "report_id"],
+            "properties": {
+              "workflow": { "const": "CreateFieldBriefing" },
+              "report_id": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "briefing.summary_delta" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text"],
+            "properties": { "text": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "briefing.finding" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["finding_id", "severity", "text"],
+            "properties": {
+              "finding_id": { "type": "string", "minLength": 1 },
+              "severity": { "enum": ["low", "medium", "high"] },
+              "text": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "briefing.action" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action_id", "priority", "text"],
+            "properties": {
+              "action_id": { "type": "string", "minLength": 1 },
+              "priority": { "enum": ["immediate", "next", "monitor"] },
+              "text": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "run.succeeded" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["result"],
+            "properties": { "result": { "$ref": "output.schema.json" } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "run.failed" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["error_code"],
+            "properties": { "error_code": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "run.cancelled" } }, "required": ["type"] },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reason"],
+            "properties": { "reason": { "const": "user_requested" } }
+          }
+        }
+      }
+    }
+  ]
+}

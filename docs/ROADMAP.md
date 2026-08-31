@@ -4,7 +4,7 @@ Dates are intentionally omitted until the validation work measures the scope.
 
 ## Stage 0: prove the need
 
-- Write three reference application requirements independent of any framework. The first two are the [document Q&A benchmark](../benchmarks/document-qa/README.md) and the [support approval benchmark](../benchmarks/support-approval/README.md).
+- Write three reference application requirements independent of any framework: [document Q&A](../benchmarks/document-qa/README.md), [support approval](../benchmarks/support-approval/README.md), and [mobile streaming](../benchmarks/mobile-streaming/README.md).
 - Implement document Q&A in plain TypeScript, BAML, and either LangGraph or Pydantic AI.
 - Draft and compare [at least two competing syntax styles](SYNTAX.md).
 - Specify the [minimum execution event model](EXECUTION-EVENTS.md).

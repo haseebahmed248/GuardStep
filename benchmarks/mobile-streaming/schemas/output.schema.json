@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:guardstep:benchmark:mobile-streaming:output:1",
+  "title": "Completed field briefing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "report_id", "summary", "findings", "actions"],
+  "properties": {
+    "status": { "const": "completed" },
+    "report_id": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_id", "severity", "text"],
+      "properties": {
+        "finding_id": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["low", "medium", "high"] },
+        "text": { "type": "string", "minLength": 1 }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "priority", "text"],
+      "properties": {
+        "action_id": { "type": "string", "minLength": 1 },
+        "priority": { "enum": ["immediate", "next", "monitor"] },
+        "text": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
