@@ -1,6 +1,6 @@
 # GuardStep architecture proposal
 
-Status: proposal. None of the components below has been implemented. [ADR 0001](decisions/0001-standalone-workflow-language.md) selects the standalone-language pipeline for the Stage 1 executable slice; the surface syntax and component choices remain provisional.
+Status: evolving implementation. [ADR 0001](decisions/0001-standalone-workflow-language.md) selects the standalone-language pipeline. The first cohesive CLI package implements the parser, semantic checker, IR, local runtime, and deterministic test boundary; the eventual package split and surface syntax remain provisional.
 
 ## System shape
 

@@ -16,6 +16,8 @@ Exit criterion: a published comparison records the source, test setup, failures,
 
 ## Stage 1: executable language slice
 
+Status: in progress. The first CLI vertical slice parses, checks, compiles, locally runs, and fixture-tests the document-Q&A workflow.
+
 - Parser, source locations, formatter, and basic language server
 - Records, enums, lists, optionals, and function/workflow signatures
 - Model and tool calls with typed inputs and outputs
