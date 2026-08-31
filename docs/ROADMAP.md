@@ -4,6 +4,8 @@ Dates are intentionally omitted until the validation work measures the scope.
 
 ## Stage 0: prove the need
 
+Status: evidence review complete. See the [Stage 0 report](STAGE-0-REPORT.md) and [standalone-language decision](decisions/0001-standalone-workflow-language.md). Unmeasured items are carried forward as explicit Stage 1 proof gates rather than treated as successful results.
+
 - Write three reference application requirements independent of any framework: [document Q&A](../benchmarks/document-qa/README.md), [support approval](../benchmarks/support-approval/README.md), and [mobile streaming](../benchmarks/mobile-streaming/README.md).
 - Implement document Q&A in plain TypeScript, BAML, and either LangGraph or Pydantic AI.
 - Draft and compare [at least two competing syntax styles](SYNTAX.md).

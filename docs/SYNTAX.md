@@ -1,6 +1,6 @@
 # GuardStep syntax options
 
-Status: Stage 0 design experiment. Neither option is a specification or an implementation commitment.
+Status: Stage 0 design experiment. [ADR 0001](decisions/0001-standalone-workflow-language.md) selects the standalone option for the Stage 1 executable slice, but neither draft below is a frozen specification.
 
 This document compares two surface syntaxes for the same workflow semantics:
 

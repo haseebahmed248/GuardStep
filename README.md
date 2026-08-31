@@ -72,6 +72,8 @@ The immediate goal is to validate the language with three real applications befo
 
 See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), [execution event model](docs/EXECUTION-EVENTS.md), and [roadmap](docs/ROADMAP.md).
 
+The [Stage 0 evidence report](docs/STAGE-0-REPORT.md) records the reproducible framework comparison and the provisional decision to test a standalone `.guard` compiler in Stage 1.
+
 ## Open source
 
 The project is licensed under [Apache License 2.0](LICENSE). Design proposals and major decisions will be discussed publicly. See [CONTRIBUTING.md](CONTRIBUTING.md) and [GOVERNANCE.md](GOVERNANCE.md).

@@ -1,6 +1,6 @@
 # GuardStep architecture proposal
 
-Status: proposal. None of the components below has been implemented. The source pipeline shown here describes the standalone-language option; the [syntax comparison](SYNTAX.md) also evaluates an embedded TypeScript API that would change the frontend and tooling layers while targeting the same IR.
+Status: proposal. None of the components below has been implemented. [ADR 0001](decisions/0001-standalone-workflow-language.md) selects the standalone-language pipeline for the Stage 1 executable slice; the surface syntax and component choices remain provisional.
 
 ## System shape
 
