@@ -7,6 +7,7 @@ This package contains the first executable GuardStep vertical slice:
 - versioned JSON-serializable workflow IR;
 - deterministic TypeScript contract generation;
 - a local runtime with injected tool and model adapters;
+- a hardened OpenAI-compatible model adapter, including local Ollama support;
 - capability, call-count, duration, cost, assertion, and output enforcement;
 - portable execution-event v1 emission; and
 - `check`, `compile`, local `run`, and deterministic `test` commands.
@@ -23,6 +24,14 @@ npm run build
 ./gs test examples/document-qa/answer.guard
 ```
 
+Run the same workflow through a local Ollama model with one command:
+
+```bash
+npm run demo:ollama
+```
+
+The one-time Ollama setup and provider configuration are documented in [Model providers](../../docs/PROVIDERS.md).
+
 When installed as a package, the executable is `guardstep` with `gs` as an alias. If the current directory contains exactly one `.guard` file, its path can be omitted:
 
 ```bash
@@ -38,4 +47,4 @@ The `test` command loads a neighboring `*.test.mjs` module. Test modules are exp
 
 `generate` writes a neighboring `*.generated.ts` file containing domain types, typed tool and model boundaries, workflow input/output/failure mappings, capabilities, and a typed host interface. It avoids rewriting unchanged output. Use `guardstep generate --check` in CI to fail when the generated file is missing or stale. This repository exposes the same check as `npm run check:generated`.
 
-This remains an alpha slice. The included host is a deterministic local demo, not a live AI provider. The language does not yet include modules, branching syntax, persistent execution, approval, streaming, code generation, formatting, or an LSP.
+This remains an alpha slice. The default host is deterministic so tests do not require a live service; the optional Ollama host exercises a real local model. The language does not yet include modules, branching syntax, persistent execution, approval, streaming, formatting, or an LSP.

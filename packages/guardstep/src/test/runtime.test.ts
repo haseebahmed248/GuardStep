@@ -191,3 +191,62 @@ test("passes only declared context and generated schema to the model", async () 
   assert.deepEqual(request.context, { question: "unknown", documents: [] });
   assert.equal(request.outputSchema.$ref, "#/$defs/Answer");
 });
+
+test("maps invalid model output to the workflow's declared failure", async () => {
+  const run = await executeWorkflow({
+    ir,
+    workflow: "AnswerQuestion",
+    runId: "invalid-model-output",
+    input: { question: "test" },
+    grantedCapabilities: new Set(["documents.search"]),
+    pricing,
+    tools: {
+      invoke: async () => ({ status: "succeeded", value: [], elapsedMs: 1 }),
+    },
+    model: {
+      generate: async () => ({
+        status: "succeeded",
+        value: "not structured JSON",
+        usage: { input_tokens: 10, output_tokens: 3 },
+        elapsedMs: 1,
+      }),
+    },
+  });
+
+  assert.equal(run.status, "failed");
+  assert.equal(run.status === "failed" ? run.error_code : undefined, "MODEL_OUTPUT_INVALID");
+  assert.deepEqual(run.events.map(({ type }) => type), [
+    "run.started",
+    "capability.checked",
+    "tool.started",
+    "tool.succeeded",
+    "model.started",
+    "model.failed",
+    "run.failed",
+  ]);
+});
+
+test("does not let a model provider choose a public workflow failure code", async () => {
+  const run = await executeWorkflow({
+    ir,
+    workflow: "AnswerQuestion",
+    runId: "model-provider-error",
+    input: { question: "test" },
+    grantedCapabilities: new Set(["documents.search"]),
+    pricing,
+    tools: {
+      invoke: async () => ({ status: "succeeded", value: [], elapsedMs: 1 }),
+    },
+    model: {
+      generate: async () => ({
+        status: "failed",
+        code: "PROVIDER_CONTROLLED_CODE",
+        elapsedMs: 1,
+      }),
+    },
+  });
+
+  assert.equal(run.status, "failed");
+  assert.equal(run.status === "failed" ? run.error_code : undefined, "MODEL_CALL_FAILED");
+  assert.doesNotMatch(JSON.stringify(run.events), /PROVIDER_CONTROLLED_CODE/);
+});

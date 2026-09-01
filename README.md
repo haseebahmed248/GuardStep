@@ -9,7 +9,7 @@
 
 GuardStep is an experimental open-source language for AI workflows. A GuardStep file declares data contracts, model calls, tool access, budgets, approval points, and failure conditions in one place.
 
-The repository now contains an executable alpha vertical slice: the CLI parses and checks the document-Q&A workflow, compiles it to versioned IR, runs it with deployment-owned adapters, and passes the 11-scenario conformance suite. It is not ready for production use.
+The repository now contains an executable alpha vertical slice: the CLI parses and checks the document-Q&A workflow, compiles it to versioned IR, generates TypeScript contracts, and runs it with either deterministic adapters or a real local Ollama model. It is not ready for production use.
 
 ## Try it
 
@@ -23,7 +23,13 @@ npm run build
 ./gs test examples/document-qa/answer.guard
 ```
 
-The short `gs` wrapper is for repository development. Installed packages expose both `guardstep` and `gs`. See the [CLI alpha documentation](packages/guardstep/README.md).
+With Ollama installed and `qwen2.5:3b` pulled, the live local-model path is one command:
+
+```bash
+npm run demo:ollama
+```
+
+The short `gs` wrapper is for repository development. Installed packages expose both `guardstep` and `gs`. See the [CLI alpha documentation](packages/guardstep/README.md) and [model-provider setup](docs/PROVIDERS.md).
 
 ## The idea
 
