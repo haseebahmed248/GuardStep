@@ -84,15 +84,20 @@ Canonical naming:
 
 ## Current work
 
-Stage 0 defined three reference applications before freezing syntax:
+GuardStep is now in **Stage 1: executable language slice**. The repository currently provides:
 
-1. A [document question-answering benchmark](benchmarks/document-qa/README.md)
-2. A [support workflow with tools and human approval](benchmarks/support-approval/README.md)
-3. A [mobile application consuming a streaming AI workflow](benchmarks/mobile-streaming/README.md)
+- a standalone `.guard` lexer, parser, semantic checker, and source-located diagnostics;
+- deterministic compilation to versioned, JSON-serializable workflow IR;
+- `check`, `compile`, `generate`, `run`, and `test` CLI commands;
+- generated TypeScript contracts for domain values, workflows, tools, models, and hosts;
+- an in-memory runtime enforcing capabilities, call limits, cost and duration budgets, assertions, and output schemas;
+- runtime-owned wall-clock deadlines with cancellation signals for tool and model adapters;
+- deterministic fixture adapters plus a real OpenAI-compatible adapter tested with local Ollama; and
+- an executable document-Q&A workflow with an 11-scenario conformance suite.
 
-See the [vision](docs/VISION.md), [landscape research](docs/research/LANDSCAPE.md), [architecture proposal](docs/ARCHITECTURE.md), [syntax options](docs/SYNTAX.md), [execution event model](docs/EXECUTION-EVENTS.md), and [roadmap](docs/ROADMAP.md).
+Stage 0 is complete. Its [evidence report](docs/STAGE-0-REPORT.md) records the reproducible framework comparison and the decision to pursue a standalone language. The three reference applications remain the validation targets for later stages: [document Q&A](benchmarks/document-qa/README.md), [support approval](benchmarks/support-approval/README.md), and [mobile streaming](benchmarks/mobile-streaming/README.md).
 
-The [Stage 0 evidence report](docs/STAGE-0-REPORT.md) records the reproducible framework comparison and the decision to test a standalone `.guard` compiler in Stage 1. The current implementation is that first executable test.
+See the [vision](docs/VISION.md), [architecture](docs/ARCHITECTURE.md), [syntax](docs/SYNTAX.md), [execution event model](docs/EXECUTION-EVENTS.md), and [roadmap](docs/ROADMAP.md).
 
 ## Open source
 
@@ -100,4 +105,4 @@ The project is licensed under [Apache License 2.0](LICENSE). Design proposals an
 
 ## Contributing today
 
-Useful contributions at this stage are concrete use cases, counterexamples, syntax experiments, and criticism of the proposed semantics. Large compiler changes should wait for an accepted RFC.
+Useful contributions at this stage include concrete workflows, compiler and runtime tests, adapter implementations, counterexamples, and documentation feedback. Major language changes should begin with an RFC so syntax and runtime semantics evolve together.
