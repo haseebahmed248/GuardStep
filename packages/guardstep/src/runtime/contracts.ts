@@ -18,6 +18,7 @@ export interface ToolInvocation {
   readonly stepId: string;
   readonly tool: string;
   readonly arguments: Readonly<Record<string, unknown>>;
+  readonly signal: AbortSignal;
 }
 
 export type ToolResult =
@@ -45,6 +46,7 @@ export interface ModelInvocation {
   readonly instructions: string;
   readonly context: Readonly<Record<string, unknown>>;
   readonly outputSchema: Readonly<Record<string, unknown>>;
+  readonly signal: AbortSignal;
 }
 
 export type ModelResult =
@@ -96,6 +98,12 @@ export interface ExecuteOptions {
   readonly pricing: Pricing;
   readonly tools: ToolAdapter;
   readonly model: ModelAdapter;
+  readonly clock?: RuntimeClock;
+}
+
+export interface RuntimeClock {
+  now(): number;
+  schedule(delayMs: number, callback: () => void): () => void;
 }
 
 export interface WorkflowHost {

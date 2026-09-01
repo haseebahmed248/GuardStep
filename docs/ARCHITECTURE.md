@@ -100,7 +100,7 @@ Every effect receives an execution ID and stable step ID. Tool adapters must dec
 
 ### Budgets
 
-Budgets may constrain model cost, tokens, tool calls, wall-clock duration, or workflow steps. Static analysis can prove only some limits; the runtime enforces the rest. Currency limits require deployment-supplied pricing data with a recorded source and effective date. Model prices must not be compiled into the language specification.
+Budgets may constrain model cost, tokens, tool calls, wall-clock duration, or workflow steps. Static analysis can prove only some limits; the runtime enforces the rest. Duration enforcement uses a runtime-owned monotonic deadline and passes an abort signal to each effect adapter. Completed effects account for the greater of measured and adapter-reported duration, allowing deterministic simulated fixtures without trusting production self-reporting. Currency limits require deployment-supplied pricing data with a recorded source and effective date. Model prices must not be compiled into the language specification.
 
 ## Target security model
 

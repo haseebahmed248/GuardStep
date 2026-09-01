@@ -19,6 +19,7 @@ const invocation: ModelInvocation = {
     required: ["answer"],
     additionalProperties: false,
   },
+  signal: new AbortController().signal,
 };
 
 const completionResponse = (
@@ -205,6 +206,34 @@ test("aborts provider requests at the configured timeout", async () => {
   const result = await adapter.generate(invocation);
 
   assert.equal(result.status === "failed" ? result.code : undefined, "PROVIDER_TIMEOUT");
+});
+
+test("forwards runtime cancellation to the provider request", async () => {
+  const runtimeController = new AbortController();
+  let notifyFetchStarted: (() => void) | undefined;
+  const fetchStarted = new Promise<void>((resolve) => {
+    notifyFetchStarted = resolve;
+  });
+  let providerSignal: AbortSignal | undefined;
+  const adapter = new OpenAICompatibleModelAdapter({
+    baseUrl: "http://localhost:11434/v1",
+    profiles: { balanced: { model: "local-model" } },
+    fetch: async (_input, init) => {
+      providerSignal = init?.signal ?? undefined;
+      notifyFetchStarted?.();
+      return await new Promise<Response>((_resolve, reject) => {
+        providerSignal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+      });
+    },
+  });
+
+  const resultPromise = adapter.generate({ ...invocation, signal: runtimeController.signal });
+  await fetchStarted;
+  runtimeController.abort();
+  const result = await resultPromise;
+
+  assert.equal(providerSignal?.aborted, true);
+  assert.equal(result.status === "failed" ? result.code : undefined, "PROVIDER_ABORTED");
 });
 
 test("validates provider configuration before any workflow can run", () => {

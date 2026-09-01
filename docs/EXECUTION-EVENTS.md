@@ -178,6 +178,16 @@ run.failed
 
 This ordering preserves the evidence needed to explain the budget decision and prevents a completed external effect from disappearing from the trace.
 
+When the runtime deadline interrupts an in-flight effect, that effect never completed, so no success or effect-failure event is invented:
+
+```text
+tool.started (or model.started)
+budget.exceeded
+run.failed
+```
+
+The runtime aborts the invocation signal before returning. Adapters should cooperate with cancellation, but a runtime cannot undo an external side effect that already occurred.
+
 ## Error semantics
 
 `error_code` is the stable workflow-facing failure code. It MUST NOT contain a provider exception message, stack trace, secret, request body, or document content.
@@ -213,7 +223,7 @@ The runtime SHOULD construct core event payloads itself. Tool and model adapters
 
 `sequence` defines observable order. V1 deliberately omits wall-clock timestamps because they are not needed for conformance, can make replay nondeterministic, and already belong in telemetry systems.
 
-`elapsed_ms` is a measured or simulated duration attached to effect/run completion. Conformance fixtures use simulated values and MUST NOT sleep. A production runtime defines the clock used for budget enforcement in run metadata.
+`elapsed_ms` is a measured or simulated duration attached to effect/run completion. Conformance fixtures use simulated values and MUST NOT sleep. The local runtime uses a monotonic clock for deadline enforcement and accounts for the greater of measured and adapter-reported effect duration. A future durable runtime records its clock policy in run metadata.
 
 Replaying a recorded run SHOULD reproduce the same portable event types, step IDs, failure code, and application summary fields. Timing and accounting values may come from the recorded effect results rather than being recomputed.
 

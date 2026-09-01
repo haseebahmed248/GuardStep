@@ -8,7 +8,7 @@ This package contains the first executable GuardStep vertical slice:
 - deterministic TypeScript contract generation;
 - a local runtime with injected tool and model adapters;
 - a hardened OpenAI-compatible model adapter, including local Ollama support;
-- capability, call-count, duration, cost, assertion, and output enforcement;
+- capability, call-count, wall-clock duration, cost, assertion, and output enforcement;
 - portable execution-event v1 emission; and
 - `check`, `compile`, local `run`, and deterministic `test` commands.
 
@@ -42,6 +42,8 @@ guardstep test
 ```
 
 `run` conventionally loads neighboring `*.input.json` and `*.host.mjs` files. A host module provides the deployment-owned capability grants, pricing, and tool/model adapters. Override those defaults with `--input`, `--host`, or `--workflow`. Host modules are trusted application code and are never loaded by `check` or `compile`.
+
+Tool and model invocations include an `AbortSignal`. The runtime aborts that signal and stops waiting when the workflow's declared duration is exhausted. Adapters should pass it to cancellable I/O such as `fetch`; cancellation cannot undo an external side effect that already happened. For completed effects, duration accounting uses the greater of adapter-reported and runtime-measured elapsed time, preserving deterministic fixtures without trusting production adapters to self-report accurately.
 
 The `test` command loads a neighboring `*.test.mjs` module. Test modules are explicitly executed test code; checking, compiling, or generating from a `.guard` file never imports or evaluates application JavaScript.
 

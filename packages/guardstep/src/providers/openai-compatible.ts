@@ -216,7 +216,17 @@ export class OpenAICompatibleModelAdapter implements ModelAdapter {
     if (profile === undefined) return failed("PROVIDER_PROFILE_NOT_FOUND", startedAt);
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.#options.timeoutMs);
+    let abortSource: "provider_timeout" | "runtime" | undefined;
+    const abortFromRuntime = (): void => {
+      abortSource ??= "runtime";
+      controller.abort(request.signal.reason);
+    };
+    if (request.signal.aborted) abortFromRuntime();
+    else request.signal.addEventListener("abort", abortFromRuntime, { once: true });
+    const timeout = setTimeout(() => {
+      abortSource ??= "provider_timeout";
+      controller.abort();
+    }, this.#options.timeoutMs);
     try {
       const userContent = profile.includeSchemaInPrompt === true
         ? JSON.stringify({ context: request.context, output_schema: request.outputSchema })
@@ -271,9 +281,15 @@ export class OpenAICompatibleModelAdapter implements ModelAdapter {
         elapsedMs: elapsedSince(startedAt),
       };
     } catch {
-      return failed(controller.signal.aborted ? "PROVIDER_TIMEOUT" : "PROVIDER_NETWORK_ERROR", startedAt);
+      const code = abortSource === "provider_timeout"
+        ? "PROVIDER_TIMEOUT"
+        : abortSource === "runtime"
+          ? "PROVIDER_ABORTED"
+          : "PROVIDER_NETWORK_ERROR";
+      return failed(code, startedAt);
     } finally {
       clearTimeout(timeout);
+      request.signal.removeEventListener("abort", abortFromRuntime);
     }
   }
 }
