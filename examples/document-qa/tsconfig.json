@@ -11,6 +11,8 @@
   },
   "include": [
     "answer.generated.ts",
-    "answer.host.mjs"
+    "answer.host.mjs",
+    "answer.ollama.host.mjs",
+    "documents.mjs"
   ]
 }

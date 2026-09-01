@@ -10,6 +10,7 @@
     "build": "npm run build --workspace guardstep",
     "check": "npm run check --workspace guardstep && tsc --project examples/document-qa/tsconfig.json",
     "check:generated": "npm run build --silent && ./gs generate examples/document-qa/answer.guard --check",
+    "demo:ollama": "npm run build --silent && ./gs run examples/document-qa/answer.guard --host examples/document-qa/answer.ollama.host.mjs",
     "test": "npm run test --workspace guardstep",
     "guardstep": "node packages/guardstep/dist/cli/main.js",
     "gs": "node packages/guardstep/dist/cli/main.js"
