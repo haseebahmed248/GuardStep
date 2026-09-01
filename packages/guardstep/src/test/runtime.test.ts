@@ -4,11 +4,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compileSource } from "../compiler/index.js";
+import type { WorkflowIrV1 } from "../ir/index.js";
 import {
   executeWorkflow,
   RuntimeConfigurationError,
   RuntimeInputError,
 } from "../runtime/index.js";
+import type { RuntimeClock } from "../runtime/index.js";
 
 const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
 const sourcePath = `${repositoryRoot}examples/document-qa/answer.guard`;
@@ -20,6 +22,17 @@ const pricing = {
   source: "unit-test",
   effective_date: "2026-08-31",
 };
+
+const withDuration = (maximumMs: number): WorkflowIrV1 => ({
+  ...ir,
+  workflows: ir.workflows.map((workflow) => ({
+    ...workflow,
+    limits: {
+      ...workflow.limits,
+      duration: { ...workflow.limits.duration, maximum_ms: maximumMs },
+    },
+  })),
+});
 
 test("rejects invalid public input before emitting workflow events", async () => {
   await assert.rejects(
@@ -249,4 +262,118 @@ test("does not let a model provider choose a public workflow failure code", asyn
   assert.equal(run.status, "failed");
   assert.equal(run.status === "failed" ? run.error_code : undefined, "MODEL_CALL_FAILED");
   assert.doesNotMatch(JSON.stringify(run.events), /PROVIDER_CONTROLLED_CODE/);
+});
+
+test("aborts a hanging tool when the workflow wall-clock deadline expires", { timeout: 1_000 }, async () => {
+  let toolSignal: AbortSignal | undefined;
+  const startedAt = performance.now();
+  const run = await executeWorkflow({
+    ir: withDuration(10),
+    workflow: "AnswerQuestion",
+    runId: "hanging-tool",
+    input: { question: "test" },
+    grantedCapabilities: new Set(["documents.search"]),
+    pricing,
+    tools: {
+      invoke: async ({ signal }) => {
+        toolSignal = signal;
+        return await new Promise(() => {});
+      },
+    },
+    model: { generate: async () => assert.fail("model must not run") },
+  });
+
+  assert.equal(run.status, "failed");
+  assert.equal(run.status === "failed" ? run.error_code : undefined, "DURATION_LIMIT_EXCEEDED");
+  assert.equal(toolSignal?.aborted, true);
+  assert.ok(performance.now() - startedAt < 500, "deadline did not terminate the hanging adapter");
+  assert.deepEqual(run.events.map(({ type }) => type), [
+    "run.started",
+    "capability.checked",
+    "tool.started",
+    "budget.exceeded",
+    "run.failed",
+  ]);
+  const budgetEvent = run.events.find(({ type }) => type === "budget.exceeded");
+  assert.ok(Number(budgetEvent?.data.actual) >= 10);
+});
+
+test("accounts for measured effect time when adapters under-report elapsed time", async () => {
+  let now = 0;
+  const clock: RuntimeClock = {
+    now: () => now,
+    schedule: () => () => {},
+  };
+  const answer = {
+    status: "insufficient_context",
+    text: "No supporting context.",
+    citations: [],
+  };
+  const run = await executeWorkflow({
+    ir,
+    workflow: "AnswerQuestion",
+    runId: "measured-time",
+    input: { question: "test" },
+    grantedCapabilities: new Set(["documents.search"]),
+    pricing,
+    clock,
+    tools: {
+      invoke: async ({ signal }) => {
+        assert.equal(signal.aborted, false);
+        now = 7;
+        return { status: "succeeded", value: [], elapsedMs: 0 };
+      },
+    },
+    model: {
+      generate: async ({ signal }) => {
+        assert.equal(signal.aborted, false);
+        now = 12;
+        return {
+          status: "succeeded",
+          value: answer,
+          usage: { input_tokens: 1, output_tokens: 1 },
+          elapsedMs: 0,
+        };
+      },
+    },
+  });
+
+  assert.equal(run.status, "succeeded");
+  assert.equal(run.events.find(({ type }) => type === "tool.succeeded")?.data.elapsed_ms, 7);
+  assert.equal(run.events.find(({ type }) => type === "model.succeeded")?.data.elapsed_ms, 5);
+  assert.equal(run.events.find(({ type }) => type === "run.succeeded")?.data.elapsed_ms, 12);
+});
+
+test("aborts a hanging model when the remaining workflow deadline expires", { timeout: 1_000 }, async () => {
+  let modelSignal: AbortSignal | undefined;
+  const run = await executeWorkflow({
+    ir: withDuration(10),
+    workflow: "AnswerQuestion",
+    runId: "hanging-model",
+    input: { question: "test" },
+    grantedCapabilities: new Set(["documents.search"]),
+    pricing,
+    tools: {
+      invoke: async () => ({ status: "succeeded", value: [], elapsedMs: 0 }),
+    },
+    model: {
+      generate: async ({ signal }) => {
+        modelSignal = signal;
+        return await new Promise(() => {});
+      },
+    },
+  });
+
+  assert.equal(run.status, "failed");
+  assert.equal(run.status === "failed" ? run.error_code : undefined, "DURATION_LIMIT_EXCEEDED");
+  assert.equal(modelSignal?.aborted, true);
+  assert.deepEqual(run.events.map(({ type }) => type), [
+    "run.started",
+    "capability.checked",
+    "tool.started",
+    "tool.succeeded",
+    "model.started",
+    "budget.exceeded",
+    "run.failed",
+  ]);
 });

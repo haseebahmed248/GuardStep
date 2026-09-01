@@ -33,6 +33,7 @@ test("generates deterministic portable TypeScript contracts", () => {
   assert.match(first, /readonly failure: FailureCode/);
   assert.match(first, /readonly "documents": ReadonlyArray<Document>/);
   assert.match(first, /readonly value: Answer/);
+  assert.equal(first.match(/readonly signal: AbortSignal;/g)?.length, 2);
 });
 
 test("rejects declarations that collide with generated API names", () => {

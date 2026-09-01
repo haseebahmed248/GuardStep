@@ -7,9 +7,9 @@
 
 <p align="center"><strong>AI workflows, one guarded step at a time.</strong></p>
 
-GuardStep is an experimental open-source language for AI workflows. A GuardStep file declares data contracts, model calls, tool access, budgets, approval points, and failure conditions in one place.
+GuardStep is an experimental open-source language for AI workflows. A GuardStep file declares data contracts, model calls, tool access, enforceable budgets, approval points, and failure conditions in one place.
 
-The repository now contains an executable alpha vertical slice: the CLI parses and checks the document-Q&A workflow, compiles it to versioned IR, generates TypeScript contracts, and runs it with either deterministic adapters or a real local Ollama model. It is not ready for production use.
+The repository now contains an executable alpha vertical slice: the CLI parses and checks the document-Q&A workflow, compiles it to versioned IR, generates TypeScript contracts, and runs it with either deterministic adapters or a real local Ollama model. The runtime enforces wall-clock deadlines and aborts in-flight adapters when the declared duration is exhausted. It is not ready for production use.
 
 ## Try it
 

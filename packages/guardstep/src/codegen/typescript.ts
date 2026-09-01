@@ -144,6 +144,7 @@ const renderTool = (tool: ToolDeclaration): string => {
   readonly stepId: string;
   readonly tool: ${JSON.stringify(tool.name)};
   readonly arguments: {${argumentsFields}};
+  readonly signal: AbortSignal;
 }
 
 export type ${symbol}Result =
@@ -174,6 +175,7 @@ const renderModel = ({ symbol, step, context }: ModelContract): string => {
 ${contextFields}
   };
   readonly outputSchema: Readonly<Record<string, unknown>>;
+  readonly signal: AbortSignal;
 }
 
 export type ${symbol}Result =

@@ -8,6 +8,7 @@ import type {
   WorkflowRun,
 } from "./contracts.js";
 import { RuntimeConfigurationError } from "./contracts.js";
+import { invokeBeforeDeadline, systemRuntimeClock } from "./deadline.js";
 import { EventRecorder } from "./events.js";
 import { ValueSystem } from "./values.js";
 
@@ -57,12 +58,15 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
   const inputValidation = values.validate(options.input, named(workflow.input.type));
   if (!inputValidation.valid) throw new RuntimeInputError(inputValidation.issues);
 
+  const clock = options.clock ?? systemRuntimeClock;
+  const runStartedAt = clock.now();
+  const wallDeadlineAt = runStartedAt + workflow.limits.duration.maximum_ms;
   const events = new EventRecorder(options.runId);
   const environment = new Map<string, unknown>([[workflow.input.parameter, options.input]]);
   const capabilityPolicies = new Map(
     workflow.capabilities.map((capability) => [capability.name, capability]),
   );
-  let elapsedMs = 0;
+  let accountedElapsedMs = 0;
   let toolCalls = 0;
   let modelCalls = 0;
   let modelCost = 0;
@@ -87,7 +91,16 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
     return fail(errorCode);
   };
 
+  const currentElapsedMs = (): number =>
+    Math.max(accountedElapsedMs, Math.max(0, clock.now() - runStartedAt));
+
+  const nextEffectDeadlineAt = (): number => {
+    const accountingRemainingMs = workflow.limits.duration.maximum_ms - accountedElapsedMs;
+    return Math.min(wallDeadlineAt, clock.now() + Math.max(0, accountingRemainingMs));
+  };
+
   const enforceDeferredBudgets = (): WorkflowRun | undefined => {
+    const elapsedMs = currentElapsedMs();
     if (elapsedMs > workflow.limits.duration.maximum_ms) {
       return failBudget(
         workflow.limits.duration.error,
@@ -137,22 +150,34 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
           values.evaluate(expression, environment),
         ]),
       );
-      let result: ToolResult;
-      try {
-        result = await options.tools.invoke({
+      const outcome = await invokeBeforeDeadline(clock, nextEffectDeadlineAt(), async (signal) =>
+        await options.tools.invoke({
           runId: options.runId,
           stepId: step.step_id,
           tool: step.tool,
           arguments: argumentsValue,
-        });
-      } catch {
+          signal,
+        }),
+      );
+      if (outcome.status === "deadline_exceeded") {
+        accountedElapsedMs += outcome.measuredElapsedMs;
+        return failBudget(
+          workflow.limits.duration.error,
+          Math.max(currentElapsedMs(), workflow.limits.duration.maximum_ms),
+          workflow.limits.duration.maximum_ms,
+          "ms",
+          "duration",
+        );
+      }
+      if (outcome.status === "threw") {
         events.emit(
           "tool.failed",
-          { tool: step.tool, error_code: step.error_error, elapsed_ms: 0 },
+          { tool: step.tool, error_code: step.error_error, elapsed_ms: outcome.measuredElapsedMs },
           step.step_id,
         );
         return fail(step.error_error);
       }
+      const result: ToolResult = outcome.value;
       if (!isNonNegativeFinite(result.elapsedMs)) {
         events.emit(
           "tool.failed",
@@ -161,12 +186,13 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
         );
         return fail(step.error_error);
       }
-      elapsedMs += result.elapsedMs;
+      const effectElapsedMs = Math.max(result.elapsedMs, outcome.measuredElapsedMs);
+      accountedElapsedMs += effectElapsedMs;
       if (result.status === "failed") {
         const errorCode = result.kind === "timeout" ? step.timeout_error : step.error_error;
         events.emit(
           "tool.failed",
-          { tool: step.tool, error_code: errorCode, elapsed_ms: result.elapsedMs },
+          { tool: step.tool, error_code: errorCode, elapsed_ms: effectElapsedMs },
           step.step_id,
         );
         return fail(errorCode);
@@ -181,7 +207,7 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
             tool: step.tool,
             error_code: step.invalid_error,
             issue_count: resultValidation.issues.length,
-            elapsed_ms: result.elapsedMs,
+            elapsed_ms: effectElapsedMs,
           },
           step.step_id,
         );
@@ -189,7 +215,7 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
       }
       events.emit(
         "tool.succeeded",
-        { ...(result.eventData ?? {}), tool: step.tool, elapsed_ms: result.elapsedMs },
+        { ...(result.eventData ?? {}), tool: step.tool, elapsed_ms: effectElapsedMs },
         step.step_id,
       );
       environment.set(step.assign, result.value);
@@ -206,24 +232,36 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
           values.evaluate(expression, environment),
         ]),
       );
-      let result: ModelResult;
-      try {
-        result = await options.model.generate({
+      const outcome = await invokeBeforeDeadline(clock, nextEffectDeadlineAt(), async (signal) =>
+        await options.model.generate({
           runId: options.runId,
           stepId: step.step_id,
           profile: step.profile,
           instructions: step.instructions,
           context,
           outputSchema: values.schema(named(step.output_type)),
-        });
-      } catch {
+          signal,
+        }),
+      );
+      if (outcome.status === "deadline_exceeded") {
+        accountedElapsedMs += outcome.measuredElapsedMs;
+        return failBudget(
+          workflow.limits.duration.error,
+          Math.max(currentElapsedMs(), workflow.limits.duration.maximum_ms),
+          workflow.limits.duration.maximum_ms,
+          "ms",
+          "duration",
+        );
+      }
+      if (outcome.status === "threw") {
         events.emit(
           "model.failed",
-          { error_code: step.error_error, elapsed_ms: 0 },
+          { error_code: step.error_error, elapsed_ms: outcome.measuredElapsedMs },
           step.step_id,
         );
         return fail(step.error_error);
       }
+      const result: ModelResult = outcome.value;
       if (
         !isNonNegativeFinite(result.elapsedMs) ||
         (result.status === "succeeded" && (
@@ -238,11 +276,12 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
         );
         return fail(step.error_error);
       }
-      elapsedMs += result.elapsedMs;
+      const effectElapsedMs = Math.max(result.elapsedMs, outcome.measuredElapsedMs);
+      accountedElapsedMs += effectElapsedMs;
       if (result.status === "failed") {
         events.emit(
           "model.failed",
-          { error_code: step.error_error, elapsed_ms: result.elapsedMs },
+          { error_code: step.error_error, elapsed_ms: effectElapsedMs },
           step.step_id,
         );
         return fail(step.error_error);
@@ -254,7 +293,7 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
           {
             error_code: step.invalid_error,
             issue_count: outputValidation.issues.length,
-            elapsed_ms: result.elapsedMs,
+            elapsed_ms: effectElapsedMs,
           },
           step.step_id,
         );
@@ -264,7 +303,7 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
       events.emit(
         "model.succeeded",
         {
-          elapsed_ms: result.elapsedMs,
+          elapsed_ms: effectElapsedMs,
           usage: { ...result.usage },
           cost: { currency: options.pricing.currency, amount: modelCost },
         },
@@ -289,7 +328,7 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
     const outputValidation = values.validate(output, named(workflow.output));
     if (!outputValidation.valid) throw new Error(`Compiler allowed invalid return: ${outputValidation.issues.join("; ")}`);
     events.emit("run.succeeded", {
-      elapsed_ms: elapsedMs,
+      elapsed_ms: currentElapsedMs(),
       cost: { currency: options.pricing.currency, amount: modelCost },
     });
     return { status: "succeeded", output, events: events.snapshot() };

@@ -52,6 +52,7 @@ export interface DocumentsSearchToolInvocation {
   readonly arguments: {
     readonly "question": string;
   };
+  readonly signal: AbortSignal;
 }
 
 export type DocumentsSearchToolResult =
@@ -78,6 +79,7 @@ export interface AnswerQuestionAnswerModelInvocation {
     readonly "documents": ReadonlyArray<Document>;
   };
   readonly outputSchema: Readonly<Record<string, unknown>>;
+  readonly signal: AbortSignal;
 }
 
 export type AnswerQuestionAnswerModelResult =

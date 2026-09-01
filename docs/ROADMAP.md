@@ -16,7 +16,7 @@ Exit criterion: a published comparison records the source, test setup, failures,
 
 ## Stage 1: executable language slice
 
-Status: in progress. The CLI vertical slice parses, checks, compiles, generates TypeScript contracts, locally runs, and fixture-tests the document-Q&A workflow.
+Status: in progress. The CLI vertical slice parses, checks, compiles, generates TypeScript contracts, locally runs, and fixture-tests the document-Q&A workflow. The local runtime now owns wall-clock deadlines, propagates abort signals, and prevents hanging adapters from outliving the declared duration budget.
 
 - Parser, source locations, formatter, and basic language server
 - Records, enums, lists, optionals, and function/workflow signatures
