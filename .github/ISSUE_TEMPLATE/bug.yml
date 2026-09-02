@@ -1,0 +1,101 @@
+name: Bug report
+description: Report reproducible incorrect behavior in GuardStep
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Remove credentials, private data, and sensitive model output before submitting.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the incorrect behavior and its impact.
+      placeholder: GuardStep accepted, rejected, or executed...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: GuardStep version or commit
+      placeholder: 0.1.0-alpha.1 or a commit SHA
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: Output of node --version
+    validations:
+      required: true
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: macOS 15, Ubuntu 24.04, Windows 11, etc.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: How are you running GuardStep?
+      options:
+        - Repository checkout
+        - Installed npm package
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Minimal .guard source
+      description: Reduce the problem to the smallest workflow that still reproduces it.
+      render: guardstep
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Include the exact command, inputs, and host setup required to reproduce the problem.
+      placeholder: |
+        1. Save the workflow as...
+        2. Run `guardstep ...`
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and diagnostics
+      description: Paste redacted output. Do not include API keys, credentials, private documents, or sensitive prompts.
+      render: shell
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed credentials, private data, and sensitive model output.
+          required: true
