@@ -2,24 +2,65 @@
   "name": "guardstep",
   "version": "0.1.0-alpha.1",
   "description": "Compiler, local runtime, and CLI for GuardStep workflows",
+  "keywords": [
+    "ai",
+    "compiler",
+    "llm",
+    "runtime",
+    "workflow"
+  ],
+  "homepage": "https://github.com/haseebahmed248/GuardStep#readme",
+  "bugs": {
+    "url": "https://github.com/haseebahmed248/GuardStep/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haseebahmed248/GuardStep.git",
+    "directory": "packages/guardstep"
+  },
+  "license": "Apache-2.0",
   "type": "module",
-  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
-    "guardstep": "./dist/cli/main.js",
-    "gs": "./dist/cli/main.js"
+    "guardstep": "dist/cli/main.js",
+    "gs": "dist/cli/main.js"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./codegen": "./dist/codegen/index.js",
-    "./compiler": "./dist/compiler/index.js",
-    "./providers": "./dist/providers/index.js",
-    "./runtime": "./dist/runtime/index.js",
-    "./ir": "./dist/ir/index.js",
-    "./testing": "./dist/testing/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./codegen": {
+      "types": "./dist/codegen/index.d.ts",
+      "import": "./dist/codegen/index.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler/index.d.ts",
+      "import": "./dist/compiler/index.js"
+    },
+    "./providers": {
+      "types": "./dist/providers/index.d.ts",
+      "import": "./dist/providers/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./ir": {
+      "types": "./dist/ir/index.d.ts",
+      "import": "./dist/ir/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    }
   },
   "files": [
     "dist",
-    "!dist/test"
+    "!dist/test",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
@@ -29,6 +70,10 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
   },
   "dependencies": {
     "ajv": "8.20.0",
