@@ -1,0 +1,112 @@
+name: Publish alpha
+
+on:
+  push:
+    tags:
+      - "v*-alpha.*"
+
+permissions: {}
+
+concurrency:
+  group: npm-alpha-release
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Verify release candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag and version contract
+        env:
+          GUARDSTEP_RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$(git tag --points-at HEAD --list "$GUARDSTEP_RELEASE_TAG")" = "$GUARDSTEP_RELEASE_TAG"
+          git merge-base --is-ancestor HEAD origin/main
+          npm run check:release -- "$GUARDSTEP_RELEASE_TAG"
+
+      - name: Check types
+        run: npm run check
+
+      - name: Verify generated contracts
+        run: npm run check:generated
+
+      - name: Run tests
+        run: npm test
+
+      - name: Test release validation
+        run: npm run test:release
+
+      - name: Verify installable package
+        run: npm run test:package
+
+      - name: Preview npm publication
+        run: npm publish --dry-run --workspace guardstep --access public --tag alpha
+
+  publish:
+    name: Publish to npm
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Recheck release contract
+        env:
+          GUARDSTEP_RELEASE_TAG: ${{ github.ref_name }}
+        run: npm run check:release -- "$GUARDSTEP_RELEASE_TAG"
+
+      - name: Publish alpha
+        run: npm publish --workspace guardstep --access public --tag alpha
+
+  github-release:
+    name: Create GitHub prerelease
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" --verify-tag --generate-notes --prerelease --title "GuardStep $RELEASE_TAG"
