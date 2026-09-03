@@ -47,6 +47,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Test release validation
+        run: npm run test:release
+
   package:
     name: Package (${{ matrix.os }})
     needs: quality
