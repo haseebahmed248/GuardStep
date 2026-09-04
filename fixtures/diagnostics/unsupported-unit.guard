@@ -1,0 +1,19 @@
+enum FailureCode {
+  DURATION_LIMIT
+  COST_LIMIT
+}
+
+record Input {
+  value: String
+}
+
+workflow UnsupportedUnit(input: Input) -> Input fails FailureCode {
+  capabilities {}
+  limits {
+    tool_calls <= 0
+    model_calls <= 0
+    duration <= 1fortnights else DURATION_LIMIT
+    cost <= 0 USD else COST_LIMIT
+  }
+  return input
+}

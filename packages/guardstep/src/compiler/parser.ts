@@ -377,6 +377,14 @@ export class Parser {
     if (this.matchValue("true")) return { kind: "literal", value: true };
     if (this.matchValue("false")) return { kind: "literal", value: false };
     if (this.matchValue("null")) return { kind: "literal", value: null };
+    if (this.checkValue("call") || this.checkValue("generate")) {
+      const effect = this.advance();
+      this.fail(
+        effect,
+        "GS2004",
+        `Effect '${effect.value}' is not allowed in a pure expression; assign it to a workflow step`,
+      );
+    }
     if (this.matchValue("(")) {
       const expression = this.parseExpression();
       this.consumeValue(")", "Expected ')' after expression");
