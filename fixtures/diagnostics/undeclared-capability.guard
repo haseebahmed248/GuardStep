@@ -1,0 +1,30 @@
+enum FailureCode {
+  CAPABILITY_DENIED
+  TIMEOUT
+  FAILED
+  INVALID
+  DURATION_LIMIT
+  COST_LIMIT
+}
+
+record Input {
+  value: String
+}
+
+record Output {
+  value: String
+}
+
+tool service.lookup(value: String) -> Output
+
+workflow UndeclaredCapability(input: Input) -> Output fails FailureCode {
+  capabilities {}
+  limits {
+    tool_calls <= 1
+    model_calls <= 0
+    duration <= 1s else DURATION_LIMIT
+    cost <= 0 USD else COST_LIMIT
+  }
+  output = call service.lookup(value: input.value) on timeout => fail TIMEOUT on error => fail FAILED on invalid => fail INVALID
+  return output
+}

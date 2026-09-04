@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "undeclared-capability",
+      "file": "undeclared-capability.guard",
+      "diagnostics": [
+        {
+          "code": "GS2002",
+          "severity": "error",
+          "message": "Tool 'service.lookup' is called without a declared capability",
+          "range": {
+            "start": { "offset": 439, "line": 28, "column": 3 },
+            "end": { "offset": 565, "line": 28, "column": 129 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-field",
+      "file": "invalid-field.guard",
+      "diagnostics": [
+        {
+          "code": "GS2102",
+          "severity": "error",
+          "message": "Type 'Input' has no field 'missing'",
+          "range": {
+            "start": { "offset": 300, "line": 18, "column": 3 },
+            "end": { "offset": 320, "line": 18, "column": 23 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "undeclared-failure",
+      "file": "undeclared-failure.guard",
+      "diagnostics": [
+        {
+          "code": "GS2003",
+          "severity": "error",
+          "message": "Failure 'NOT_DECLARED' is not declared by FailureCode",
+          "range": {
+            "start": { "offset": 305, "line": 18, "column": 3 },
+            "end": { "offset": 335, "line": 18, "column": 33 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-return",
+      "file": "missing-return.guard",
+      "diagnostics": [
+        {
+          "code": "GS2202",
+          "severity": "error",
+          "message": "Workflow 'MissingReturn' has no return",
+          "range": {
+            "start": { "offset": 86, "line": 10, "column": 1 },
+            "end": { "offset": 300, "line": 18, "column": 2 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-unit",
+      "file": "unsupported-unit.guard",
+      "diagnostics": [
+        {
+          "code": "GS1204",
+          "severity": "error",
+          "message": "Unsupported duration unit 'fortnights'",
+          "range": {
+            "start": { "offset": 241, "line": 15, "column": 18 },
+            "end": { "offset": 251, "line": 15, "column": 28 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "effect-in-pure-expression",
+      "file": "effect-in-pure-expression.guard",
+      "diagnostics": [
+        {
+          "code": "GS2004",
+          "severity": "error",
+          "message": "Effect 'call' is not allowed in a pure expression; assign it to a workflow step",
+          "range": {
+            "start": { "offset": 317, "line": 18, "column": 10 },
+            "end": { "offset": 321, "line": 18, "column": 14 }
+          }
+        }
+      ]
+    }
+  ]
+}
