@@ -19,7 +19,12 @@ export class GuardStepDiagnosticError extends Error {
 
 export const formatDiagnostic = (diagnostic: Diagnostic, source: string): string => {
   const line = source.split(/\r?\n/)[diagnostic.range.start.line - 1] ?? "";
-  const markerWidth = Math.max(1, diagnostic.range.end.column - diagnostic.range.start.column);
+  const markerWidth = Math.max(
+    1,
+    diagnostic.range.start.line === diagnostic.range.end.line
+      ? diagnostic.range.end.column - diagnostic.range.start.column
+      : line.length - diagnostic.range.start.column + 1,
+  );
   const marker = `${" ".repeat(Math.max(0, diagnostic.range.start.column - 1))}${"^".repeat(markerWidth)}`;
   return [
     `${diagnostic.sourcePath}:${diagnostic.range.start.line}:${diagnostic.range.start.column} ${diagnostic.code} ${diagnostic.message}`,
