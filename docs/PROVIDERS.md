@@ -62,4 +62,6 @@ Set `includeSchemaInPrompt: true` for smaller local models that need extra schem
 
 It maps `prompt_tokens` and `completion_tokens` back to GuardStep usage so the runtime can enforce cost budgets. The runtime's cancellation signal is forwarded to `fetch`, so an in-flight provider request is aborted when the workflow deadline expires. Missing usage, malformed responses, network failures, HTTP failures, oversized bodies, and provider timeouts fail closed. Invalid assistant JSON is passed to the runtime's schema validator and becomes the workflow's declared `on invalid` failure.
 
+The adapter attempts to cancel oversized response bodies even when `Content-Length` allows rejecting them before reading.
+
 Remote endpoints require HTTPS by default. Plain HTTP is accepted automatically only for loopback Ollama URLs. `allowInsecureHttp` exists for an explicitly trusted private network. API keys are sent only in the Authorization header and provider response bodies are not copied into workflow events.
