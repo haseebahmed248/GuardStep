@@ -48,8 +48,10 @@ Contributions use the [Developer Certificate of Origin 1.1](https://developercer
 
 ## Conduct
 
-Be direct about technical disagreements while remaining respectful toward people. Harassment, discrimination, personal attacks, and deliberately unsafe contributions are not accepted. Maintainers may moderate project spaces to protect constructive participation.
+Follow the [Code of Conduct](CODE_OF_CONDUCT.md). Be direct about technical disagreements while remaining respectful toward people. Harassment, discrimination, personal attacks, and deliberately unsafe contributions are not accepted.
+
+Report conduct concerns privately to [haseebahmed6621@gmail.com](mailto:haseebahmed6621@gmail.com), not in public issues or pull requests. The policy explains the founding maintainer's reporting and enforcement responsibilities.
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under Apache License 2.0.
+By contributing, you agree that your contributions will be licensed under Apache License 2.0, except changes to [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), which are licensed under CC BY-SA 4.0 as stated in that document.
