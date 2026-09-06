@@ -48,6 +48,31 @@ test("rejects an invalid record field", () => {
   assert.ok(diagnosticCodes(source).includes("GS2102"));
 });
 
+test("distinguishes null from String tool arguments", () => {
+  const nullArgument = validSource.replace(
+    "documents.search(question: input.question)",
+    "documents.search(question: null)",
+  );
+  assert.ok(diagnosticCodes(nullArgument).includes("GS2105"));
+
+  const stringArgument = validSource.replace(
+    "documents.search(question: input.question)",
+    'documents.search(question: "literal question")',
+  );
+  assert.doesNotThrow(() => compileSource({ source: stringArgument, sourcePath }));
+});
+
+test("preserves null literals in model context", () => {
+  const source = validSource.replace(
+    "      question: input.question\n      documents: documents",
+    "      question: null\n      documents: documents",
+  );
+  const ir = compileSource({ source, sourcePath });
+  const modelStep = ir.workflows[0]?.steps.find(({ kind }) => kind === "model");
+  assert.equal(modelStep?.kind, "model");
+  assert.deepEqual(modelStep.context.question, { kind: "literal", value: null });
+});
+
 test("rejects an undeclared failure code", () => {
   const source = validSource.replace("else CITATION_REQUIRED", "else NOT_DECLARED");
   assert.ok(diagnosticCodes(source).includes("GS2003"));

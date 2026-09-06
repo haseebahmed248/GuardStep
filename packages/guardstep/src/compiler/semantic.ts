@@ -11,6 +11,7 @@ import type { ParsedProgram } from "./parser.js";
 type InferredType =
   | TypeReference
   | { readonly kind: "boolean" }
+  | { readonly kind: "null" }
   | { readonly kind: "number" }
   | { readonly kind: "unknown" };
 
@@ -255,6 +256,7 @@ export class SemanticAnalyzer {
     range: SourceRange,
   ): InferredType {
     if (expression.kind === "literal") {
+      if (expression.value === null) return { kind: "null" };
       if (typeof expression.value === "number") return { kind: "number" };
       if (typeof expression.value === "boolean") return { kind: "boolean" };
       return { kind: "named", name: "String" };

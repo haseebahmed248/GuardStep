@@ -34,3 +34,10 @@ orderable using the runtime's existing string comparisons. Booleans, records,
 and lists are rejected during semantic checking with `GS2105`, rather than
 throwing during workflow execution. Equality (`==`, `!=`) retains its existing
 matching-type rules; this check does not add coercion or change equality.
+
+## Null tool arguments
+
+`null` remains a valid literal for model context, where providers may need to
+distinguish an explicit null from an omitted key. Tool parameters are
+non-nullable, so passing `null` where a tool declares `String` is rejected
+during semantic checking with `GS2105`.

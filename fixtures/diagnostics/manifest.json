@@ -113,6 +113,29 @@
           }
         }
       ]
+    },
+    {
+      "id": "null-tool-argument",
+      "file": "null-tool-argument.guard",
+      "diagnostics": [
+        {
+          "code": "GS2105",
+          "severity": "error",
+          "message": "Argument 'text' expects String, received null",
+          "range": {
+            "start": {
+              "offset": 335,
+              "line": 13,
+              "column": 3
+            },
+            "end": {
+              "offset": 454,
+              "line": 16,
+              "column": 31
+            }
+          }
+        }
+      ]
     }
   ]
 }
