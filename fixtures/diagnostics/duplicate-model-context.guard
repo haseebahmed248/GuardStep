@@ -1,0 +1,21 @@
+enum Failure { ERROR INVALID DURATION COST }
+record Input { text: String }
+workflow Example(input: Input) -> Input fails Failure {
+  capabilities {}
+  limits {
+    tool_calls <= 0
+    model_calls <= 1
+    duration <= 1s else DURATION
+    cost <= 0 USD else COST
+  }
+  result = generate Input using model("test") {
+    instructions: "Return the input."
+    context: {
+      text: input.text
+      text: "overridden"
+    }
+  }
+    on error => fail ERROR
+    on invalid => fail INVALID
+  return result
+}

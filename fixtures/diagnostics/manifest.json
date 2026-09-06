@@ -90,6 +90,144 @@
           }
         }
       ]
+    },
+    {
+      "id": "duplicate-tool-calls",
+      "file": "duplicate-tool-calls.guard",
+      "diagnostics": [
+        {
+          "code": "GS1101",
+          "severity": "error",
+          "message": "Duplicate limit 'tool_calls'",
+          "range": {
+            "start": {
+              "offset": 177,
+              "line": 7,
+              "column": 5
+            },
+            "end": {
+              "offset": 187,
+              "line": 7,
+              "column": 15
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-model-calls",
+      "file": "duplicate-model-calls.guard",
+      "diagnostics": [
+        {
+          "code": "GS1101",
+          "severity": "error",
+          "message": "Duplicate limit 'model_calls'",
+          "range": {
+            "start": {
+              "offset": 198,
+              "line": 8,
+              "column": 5
+            },
+            "end": {
+              "offset": 209,
+              "line": 8,
+              "column": 16
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-duration",
+      "file": "duplicate-duration.guard",
+      "diagnostics": [
+        {
+          "code": "GS1101",
+          "severity": "error",
+          "message": "Duplicate limit 'duration'",
+          "range": {
+            "start": {
+              "offset": 231,
+              "line": 9,
+              "column": 5
+            },
+            "end": {
+              "offset": 239,
+              "line": 9,
+              "column": 13
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-cost",
+      "file": "duplicate-cost.guard",
+      "diagnostics": [
+        {
+          "code": "GS1101",
+          "severity": "error",
+          "message": "Duplicate limit 'cost'",
+          "range": {
+            "start": {
+              "offset": 259,
+              "line": 10,
+              "column": 5
+            },
+            "end": {
+              "offset": 263,
+              "line": 10,
+              "column": 9
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-tool-argument",
+      "file": "duplicate-tool-argument.guard",
+      "diagnostics": [
+        {
+          "code": "GS1101",
+          "severity": "error",
+          "message": "Duplicate tool argument 'text'",
+          "range": {
+            "start": {
+              "offset": 371,
+              "line": 12,
+              "column": 40
+            },
+            "end": {
+              "offset": 375,
+              "line": 12,
+              "column": 44
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-model-context",
+      "file": "duplicate-model-context.guard",
+      "diagnostics": [
+        {
+          "code": "GS1101",
+          "severity": "error",
+          "message": "Duplicate model context key 'text'",
+          "range": {
+            "start": {
+              "offset": 396,
+              "line": 15,
+              "column": 7
+            },
+            "end": {
+              "offset": 400,
+              "line": 15,
+              "column": 11
+            }
+          }
+        }
+      ]
     }
   ]
 }

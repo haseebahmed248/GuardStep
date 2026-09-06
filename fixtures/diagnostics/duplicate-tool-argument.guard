@@ -1,0 +1,17 @@
+enum Failure { DENIED TIMEOUT ERROR INVALID DURATION COST }
+record Input { text: String }
+tool echo(text: String) -> Input
+workflow Example(input: Input) -> Input fails Failure {
+  capabilities { echo else DENIED }
+  limits {
+    tool_calls <= 1
+    model_calls <= 0
+    duration <= 1s else DURATION
+    cost <= 0 USD else COST
+  }
+  result = call echo(text: input.text, text: "overridden")
+    on timeout => fail TIMEOUT
+    on error => fail ERROR
+    on invalid => fail INVALID
+  return result
+}

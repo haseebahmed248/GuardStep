@@ -16,6 +16,7 @@ The initial proof gates are:
 
 | Code | Condition |
 | --- | --- |
+| `GS1101` | duplicate declaration or entry, including limits, tool arguments, and model context keys |
 | `GS1204` | unsupported duration unit |
 | `GS2002` | tool call without a declared capability |
 | `GS2003` | failure outside the workflow failure set |
@@ -24,3 +25,11 @@ The initial proof gates are:
 | `GS2202` | workflow without a return |
 
 When adding or intentionally changing a diagnostic, update the smallest relevant `.guard` fixture and its manifest entry in the same pull request.
+
+## Duplicate entries
+
+Each limit name, named tool argument, and model context key may appear only
+once in its block or call. A repeated key produces `GS1101` at that key's
+source location before its value can replace the earlier entry. This applies
+even when both values are identical. Unique entries may be reordered, and
+names may be reused in separate calls, context blocks, or workflow limits.
