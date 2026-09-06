@@ -22,6 +22,7 @@ The initial proof gates are:
 | `GS2003` | failure outside the workflow failure set |
 | `GS2004` | effect attempted inside a pure expression |
 | `GS2102` | invalid field access |
+| `GS2105` | incompatible expression operands, including unsupported ordering |
 | `GS2202` | workflow without a return |
 
 When adding or intentionally changing a diagnostic, update the smallest relevant `.guard` fixture and its manifest entry in the same pull request.
@@ -33,3 +34,12 @@ once in its block or call. A repeated key produces `GS1101` at that key's
 source location before its value can replace the earlier entry. This applies
 even when both values are identical. Unique entries may be reordered, and
 names may be reused in separate calls, context blocks, or workflow limits.
+
+## Comparison operands
+
+Ordering operators (`<`, `<=`, `>`, `>=`) require matching numeric or
+string-backed types. `String`, `Url`, and values of the same enum remain
+orderable using the runtime's existing string comparisons. Booleans, records,
+and lists are rejected during semantic checking with `GS2105`, rather than
+throwing during workflow execution. Equality (`==`, `!=`) retains its existing
+matching-type rules; this check does not add coercion or change equality.

@@ -92,6 +92,29 @@
       ]
     },
     {
+      "id": "unsupported-ordering",
+      "file": "unsupported-ordering.guard",
+      "diagnostics": [
+        {
+          "code": "GS2105",
+          "severity": "error",
+          "message": "Ordering operator '>' requires numbers or strings, not boolean",
+          "range": {
+            "start": {
+              "offset": 261,
+              "line": 11,
+              "column": 3
+            },
+            "end": {
+              "offset": 293,
+              "line": 11,
+              "column": 35
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "duplicate-tool-calls",
       "file": "duplicate-tool-calls.guard",
       "diagnostics": [

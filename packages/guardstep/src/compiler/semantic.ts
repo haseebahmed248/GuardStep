@@ -315,8 +315,28 @@ export class SemanticAnalyzer {
         `Cannot compare ${typeKey(left)} with ${typeKey(right)}`,
         range,
       );
+    } else if (
+      expression.operator !== "==" && expression.operator !== "!=" &&
+      left.kind !== "unknown" && right.kind !== "unknown" &&
+      (!this.isOrderable(left) || !this.isOrderable(right))
+    ) {
+      this.error(
+        "GS2105",
+        `Ordering operator '${expression.operator}' requires numbers or strings, not ${typeKey(left)}`,
+        range,
+      );
     }
     return { kind: "boolean" };
+  }
+
+  private isOrderable(type: InferredType): boolean {
+    // Url and enum values are strings at runtime; records and lists are not.
+    return type.kind === "number" || (
+      type.kind === "named" && (
+        type.name === "String" || type.name === "Url" ||
+        this.typeDeclarations.get(type.name) === "enum"
+      )
+    );
   }
 
   private validateType(type: TypeReference, range: SourceRange): void {
