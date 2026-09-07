@@ -50,10 +50,21 @@ export const invokeBeforeDeadline = async <Value>(
 ): Promise<DeadlineOutcome<Value>> => {
   const startedAt = clock.now();
   const controller = new AbortController();
+  if (startedAt >= deadlineAt) {
+    controller.abort();
+    return { status: "deadline_exceeded", measuredElapsedMs: 0 };
+  }
   const invocation = Promise.resolve()
-    .then(async () => await invoke(controller.signal))
+    .then(async () => {
+      if (controller.signal.aborted || clock.now() >= deadlineAt) {
+        controller.abort();
+        return { status: "deadline_exceeded", measuredElapsedMs: elapsedSince(clock, startedAt) } as const;
+      }
+      const value = await invoke(controller.signal);
+      return { status: "returned", value, measuredElapsedMs: elapsedSince(clock, startedAt) } as const;
+    })
     .then<DeadlineOutcome<Value>, DeadlineOutcome<Value>>(
-      (value) => ({ status: "returned", value, measuredElapsedMs: elapsedSince(clock, startedAt) }),
+      (outcome) => outcome,
       () => ({ status: "threw", measuredElapsedMs: elapsedSince(clock, startedAt) }),
     );
 

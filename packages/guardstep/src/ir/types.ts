@@ -121,9 +121,26 @@ export interface ReturnStep {
   readonly source: SourceRange;
 }
 
-export type WorkflowStep = ToolStep | ModelStep | AssertionStep | ReturnStep;
+export interface FailStep {
+  readonly kind: "fail";
+  readonly step_id: string;
+  readonly error: string;
+  readonly source: SourceRange;
+}
 
-export interface WorkflowDeclaration {
+export interface BranchStep {
+  readonly kind: "branch";
+  readonly step_id: string;
+  readonly condition: Expression;
+  readonly then: readonly WorkflowStep[];
+  readonly else: readonly WorkflowStep[];
+  readonly source: SourceRange;
+}
+
+export type LinearWorkflowStep = ToolStep | ModelStep | AssertionStep | ReturnStep;
+export type WorkflowStep = LinearWorkflowStep | FailStep | BranchStep;
+
+export interface WorkflowDeclaration<Step extends WorkflowStep = WorkflowStep> {
   readonly name: string;
   readonly input: {
     readonly parameter: string;
@@ -133,7 +150,7 @@ export interface WorkflowDeclaration {
   readonly failures: string;
   readonly capabilities: readonly CapabilityPolicy[];
   readonly limits: WorkflowLimits;
-  readonly steps: readonly WorkflowStep[];
+  readonly steps: readonly Step[];
   readonly source: SourceRange;
 }
 
@@ -148,5 +165,12 @@ export interface WorkflowIrV1 {
     readonly records: readonly RecordDeclaration[];
     readonly tools: readonly ToolDeclaration[];
   };
+  readonly workflows: readonly WorkflowDeclaration<LinearWorkflowStep>[];
+}
+
+export interface WorkflowIrV2 extends Omit<WorkflowIrV1, "schema_version" | "workflows"> {
+  readonly schema_version: 2;
   readonly workflows: readonly WorkflowDeclaration[];
 }
+
+export type WorkflowIr = WorkflowIrV1 | WorkflowIrV2;

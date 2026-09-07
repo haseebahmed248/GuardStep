@@ -3,7 +3,7 @@ import type {
   Expression,
   RecordDeclaration,
   TypeReference,
-  WorkflowIrV1,
+  WorkflowIr,
 } from "../ir/index.js";
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -19,7 +19,7 @@ export class ValueSystem {
   private readonly enums = new Map<string, EnumDeclaration>();
   private readonly enumValues = new Set<string>();
 
-  constructor(ir: WorkflowIrV1) {
+  constructor(ir: WorkflowIr) {
     for (const record of ir.declarations.records) this.records.set(record.name, record);
     for (const declaration of ir.declarations.enums) {
       this.enums.set(declaration.name, declaration);

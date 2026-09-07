@@ -1,4 +1,5 @@
-import type { TypeReference, WorkflowDeclaration } from "../ir/index.js";
+import type { TypeReference, WorkflowDeclaration, WorkflowStep } from "../ir/index.js";
+import { assertSupportedIr } from "../ir/control-flow.js";
 import type {
   ExecuteOptions,
   ModelResult,
@@ -26,6 +27,12 @@ const calculateCost = (usage: TokenUsage, pricing: Pricing): number =>
 const named = (name: string): TypeReference => ({ kind: "named", name });
 const isNonNegativeFinite = (value: number): boolean => Number.isFinite(value) && value >= 0;
 
+interface ExecutionFrame {
+  readonly steps: readonly WorkflowStep[];
+  readonly environment: Map<string, unknown>;
+  index: number;
+}
+
 const validatePricing = (pricing: Pricing, expectedCurrency: string): void => {
   if (pricing.currency !== expectedCurrency) {
     throw new RuntimeConfigurationError(
@@ -49,6 +56,7 @@ const validatePricing = (pricing: Pricing, expectedCurrency: string): void => {
 };
 
 export const executeWorkflow = async (options: ExecuteOptions): Promise<WorkflowRun> => {
+  assertSupportedIr(options.ir);
   const workflow = options.ir.workflows.find(({ name }) => name === options.workflow);
   if (workflow === undefined) throw new Error(`Workflow not found: ${options.workflow}`);
 
@@ -62,7 +70,9 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
   const runStartedAt = clock.now();
   const wallDeadlineAt = runStartedAt + workflow.limits.duration.maximum_ms;
   const events = new EventRecorder(options.runId);
-  const environment = new Map<string, unknown>([[workflow.input.parameter, options.input]]);
+  const frames: ExecutionFrame[] = [
+    { steps: workflow.steps, index: 0, environment: new Map([[workflow.input.parameter, options.input]]) },
+  ];
   const capabilityPolicies = new Map(
     workflow.capabilities.map((capability) => [capability.name, capability]),
   );
@@ -124,11 +134,25 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
 
   events.emit("run.started", { workflow: workflow.name });
 
-  for (const step of workflow.steps) {
-    if (step.kind === "tool" || step.kind === "model") {
+  while (frames.length > 0) {
+    const frame = frames[frames.length - 1]!;
+    const step = frame.steps[frame.index++];
+    if (step === undefined) {
+      frames.pop();
+      continue;
+    }
+    const environment = frame.environment;
+    if (step.kind === "tool" || step.kind === "model" || step.kind === "branch" || step.kind === "fail") {
       const budgetFailure = enforceDeferredBudgets();
       if (budgetFailure !== undefined) return budgetFailure;
     }
+
+    if (step.kind === "branch") {
+      const selected = values.requireBoolean(values.evaluate(step.condition, environment));
+      frames.push({ steps: selected ? step.then : step.else, index: 0, environment: new Map(environment) });
+      continue;
+    }
+    if (step.kind === "fail") return fail(step.error);
 
     if (step.kind === "tool") {
       const capability = capabilityPolicies.get(step.tool);
@@ -327,6 +351,8 @@ export const executeWorkflow = async (options: ExecuteOptions): Promise<Workflow
     const output = values.evaluate(step.value, environment);
     const outputValidation = values.validate(output, named(workflow.output));
     if (!outputValidation.valid) throw new Error(`Compiler allowed invalid return: ${outputValidation.issues.join("; ")}`);
+    const finalBudgetFailure = enforceDeferredBudgets();
+    if (finalBudgetFailure !== undefined) return finalBudgetFailure;
     events.emit("run.succeeded", {
       elapsed_ms: currentElapsedMs(),
       cost: { currency: options.pricing.currency, amount: modelCost },
