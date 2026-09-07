@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { setImmediate as nextTurn } from "node:timers/promises";
 
 import {
   createOpenAICompatibleModelAdapter,
@@ -215,6 +216,33 @@ test("cancels responses rejected by Content-Length", async (context) => {
       assert.doesNotMatch(JSON.stringify(result), /private provider contents/);
     });
   }
+
+  await context.test("cancellation remains pending", async (context) => {
+    let finishCancellation: (() => void) | undefined;
+    const cancellation = new Promise<void>((resolve) => {
+      finishCancellation = resolve;
+    });
+    const cancel = context.mock.fn(() => cancellation);
+    const adapter = new OpenAICompatibleModelAdapter({
+      baseUrl: "http://localhost:11434/v1",
+      profiles: { balanced: { model: "local-model" } },
+      maxResponseBytes: 10,
+      fetch: async () => new Response(new ReadableStream<Uint8Array>({ cancel }), {
+        headers: { "content-length": "1000" },
+      }),
+    });
+
+    const generation = adapter.generate(invocation);
+    try {
+      const result = await Promise.race([generation, nextTurn()]);
+      assert.ok(result, "oversized response rejection must not wait for cancellation");
+      assert.equal(cancel.mock.callCount(), 1);
+      assert.equal(result.status === "failed" ? result.code : undefined, "PROVIDER_RESPONSE_TOO_LARGE");
+    } finally {
+      finishCancellation?.();
+      await generation;
+    }
+  });
 
   await context.test("response has no body to cancel", async () => {
     const adapter = new OpenAICompatibleModelAdapter({
