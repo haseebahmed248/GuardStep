@@ -62,6 +62,15 @@ test("distinguishes null from String tool arguments", () => {
   assert.doesNotThrow(() => compileSource({ source: stringArgument, sourcePath }));
 });
 
+test("distinguishes null literals from records named null", () => {
+  const source = validSource
+    .replace("record Citation {", "record null {\n  text: String\n}\n\nrecord Citation {")
+    .replace("tool documents.search(question: String)", "tool documents.search(question: null)")
+    .replace("documents.search(question: input.question)", "documents.search(question: null)");
+
+  assert.ok(diagnosticCodes(source).includes("GS2105"));
+});
+
 test("preserves null literals in model context", () => {
   const source = validSource.replace(
     "      question: input.question\n      documents: documents",

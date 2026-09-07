@@ -21,8 +21,13 @@ const typeKey = (type: InferredType): string => {
   return type.kind;
 };
 
-const sameType = (left: InferredType, right: InferredType): boolean =>
-  left.kind === "unknown" || right.kind === "unknown" || typeKey(left) === typeKey(right);
+const sameType = (left: InferredType, right: InferredType): boolean => {
+  if (left.kind === "unknown" || right.kind === "unknown") return true;
+  if (left.kind !== right.kind) return false;
+  if (left.kind === "list" && right.kind === "list") return sameType(left.element, right.element);
+  if (left.kind === "named" && right.kind === "named") return left.name === right.name;
+  return true;
+};
 
 export class SemanticAnalyzer {
   private readonly diagnostics: Diagnostic[] = [];
