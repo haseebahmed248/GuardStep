@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { generateTypeScript, TypeScriptGenerationError } from "../codegen/index.js";
 import { compileSource } from "../compiler/index.js";
-import type { WorkflowIrV1 } from "../ir/index.js";
+import type { WorkflowIr } from "../ir/index.js";
 import { GUARDSTEP_VERSION } from "../version.js";
 
 const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
@@ -37,7 +37,7 @@ test("generates deterministic portable TypeScript contracts", () => {
 });
 
 test("rejects declarations that collide with generated API names", () => {
-  const conflicting: WorkflowIrV1 = {
+  const conflicting: WorkflowIr = {
     ...ir,
     declarations: {
       ...ir.declarations,

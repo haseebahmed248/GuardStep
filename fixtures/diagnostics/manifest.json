@@ -2,6 +2,42 @@
   "schemaVersion": 1,
   "fixtures": [
     {
+      "id": "incomplete-branch",
+      "file": "incomplete-branch.guard",
+      "diagnostics": [{
+        "code": "GS2202", "severity": "error",
+        "message": "Workflow 'Incomplete' must return or fail on every path",
+        "range": {
+          "start": { "offset": 66, "line": 3, "column": 1 },
+          "end": { "offset": 309, "line": 14, "column": 2 }
+        }
+      }]
+    },
+    {
+      "id": "non-boolean-branch",
+      "file": "non-boolean-branch.guard",
+      "diagnostics": [{
+        "code": "GS2201", "severity": "error",
+        "message": "Branch condition must be boolean, received String",
+        "range": {
+          "start": { "offset": 262, "line": 11, "column": 3 },
+          "end": { "offset": 323, "line": 15, "column": 4 }
+        }
+      }]
+    },
+    {
+      "id": "unreachable-branch",
+      "file": "unreachable-branch.guard",
+      "diagnostics": [{
+        "code": "GS2203", "severity": "error",
+        "message": "Unreachable step after a terminal return, fail, or branch",
+        "range": {
+          "start": { "offset": 336, "line": 16, "column": 3 },
+          "end": { "offset": 348, "line": 16, "column": 15 }
+        }
+      }]
+    },
+    {
       "id": "undeclared-capability",
       "file": "undeclared-capability.guard",
       "diagnostics": [

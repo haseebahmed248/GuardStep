@@ -23,7 +23,9 @@ The initial proof gates are:
 | `GS2004` | effect attempted inside a pure expression |
 | `GS2102` | invalid field access |
 | `GS2105` | incompatible expression operands, including unsupported ordering |
-| `GS2202` | workflow without a return |
+| `GS2201` | non-boolean assertion or branch condition |
+| `GS2202` | missing final-result path or incompatible return type |
+| `GS2203` | unreachable statement after return, fail, or an exhaustive terminal branch |
 
 When adding or intentionally changing a diagnostic, update the smallest relevant `.guard` fixture and its manifest entry in the same pull request.
 

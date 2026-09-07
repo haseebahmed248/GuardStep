@@ -1,5 +1,7 @@
 import type {
   AssertionStep,
+  BranchStep,
+  FailStep,
   CapabilityPolicy,
   EnumDeclaration,
   Expression,
@@ -116,14 +118,8 @@ export class Parser {
       } else if (this.matchValue("limits")) {
         if (limits !== undefined) this.fail(this.previous(), "GS1003", "Duplicate limits block");
         limits = this.parseLimits();
-      } else if (this.matchValue("require")) {
-        steps.push(this.parseAssertion(this.previous()));
-      } else if (this.matchValue("return")) {
-        steps.push(this.parseReturn(this.previous()));
-      } else if (this.checkKind("identifier") && this.peek(1).value === "=") {
-        steps.push(this.parseAssignment());
       } else {
-        this.fail(this.current(), "GS1004", "Expected workflow policy block or step");
+        steps.push(this.parseStep());
       }
     }
 
@@ -138,12 +134,60 @@ export class Parser {
       failures: failures.value,
       capabilities,
       limits,
-      steps: steps.map((step) => ({
-        ...step,
-        step_id: `${name.value}/${step.step_id}`,
-      })),
+      steps: this.qualifySteps(steps, name.value),
       source: this.range(start, end),
     };
+  }
+
+  private qualifySteps(
+    steps: readonly WorkflowStep[],
+    prefix: string,
+    controlFlow = steps.some((step) => step.kind === "branch" || step.kind === "fail"),
+  ): readonly WorkflowStep[] {
+    return steps.map((step, index) => {
+      const localId = step.kind === "branch" ? `branch:${index}`
+        : controlFlow && step.kind === "assertion" ? `assertion:${step.error}:${index}` : step.step_id;
+      const stepId = `${prefix}/${localId}`;
+      if (step.kind !== "branch") return { ...step, step_id: stepId };
+      return {
+        ...step, step_id: stepId,
+        then: this.qualifySteps(step.then, `${stepId}/then`, controlFlow),
+        else: this.qualifySteps(step.else, `${stepId}/else`, controlFlow),
+      };
+    });
+  }
+
+  private parseStep(): WorkflowStep {
+    // Preserve existing assignment identifiers even when they spell new keywords.
+    if (this.checkKind("identifier") && this.peek(1).value === "=") return this.parseAssignment();
+    if (this.matchValue("require")) return this.parseAssertion(this.previous());
+    if (this.matchValue("return")) return this.parseReturn(this.previous());
+    if (this.matchValue("fail")) return this.parseFail(this.previous());
+    if (this.matchValue("if")) return this.parseBranch(this.previous());
+    this.fail(this.current(), "GS1004", "Expected workflow step");
+  }
+
+  private parseBlock(): readonly WorkflowStep[] {
+    this.consumeValue("{", "Expected '{' before branch body");
+    const steps: WorkflowStep[] = [];
+    while (!this.checkValue("}")) steps.push(this.parseStep());
+    this.consumeValue("}", "Expected '}' after branch body");
+    return steps;
+  }
+
+  private parseBranch(start: Token): BranchStep {
+    const condition = this.parseExpression();
+    const yes = this.parseBlock();
+    let no: readonly WorkflowStep[] = [];
+    if (this.matchValue("else")) {
+      no = this.matchValue("if") ? [this.parseBranch(this.previous())] : this.parseBlock();
+    }
+    return { kind: "branch", step_id: "branch", condition, then: yes, else: no, source: this.range(start, this.previous()) };
+  }
+
+  private parseFail(start: Token): FailStep {
+    const error = this.consumeKind("identifier", "Expected workflow failure code");
+    return { kind: "fail", step_id: `fail:${error.value}`, error: error.value, source: this.range(start, error) };
   }
 
   private parseCapabilities(): readonly CapabilityPolicy[] {

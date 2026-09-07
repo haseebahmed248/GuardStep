@@ -1,11 +1,11 @@
 import { isDeepStrictEqual } from "node:util";
 
-import type { WorkflowIrV1 } from "../ir/index.js";
+import type { WorkflowIr } from "../ir/index.js";
 import { executeWorkflow } from "../runtime/index.js";
 import type { GuardTestCaseResult, GuardTestSuite } from "./contracts.js";
 
 export const runTestSuite = async (
-  ir: WorkflowIrV1,
+  ir: WorkflowIr,
   suite: GuardTestSuite,
 ): Promise<readonly GuardTestCaseResult[]> => {
   if (suite.schemaVersion !== 1) throw new Error(`Unsupported test suite version: ${suite.schemaVersion}`);

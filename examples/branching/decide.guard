@@ -1,0 +1,39 @@
+enum Failure { EMPTY DENIED TIMEOUT ERROR INVALID DURATION COST }
+record Message { text: String }
+tool echo(text: String) -> Message
+
+workflow Decide(input: Message) -> Message fails Failure {
+  capabilities { echo else DENIED }
+  limits {
+    tool_calls <= 1
+    model_calls <= 1
+    duration <= 1s else DURATION
+    cost <= 0 USD else COST
+  }
+
+  if input.text == "" {
+    fail EMPTY
+  } else if input.text == "cached" {
+    return input
+  } else if input.text == "local" {
+    reply = generate Message using model("mock") {
+      instructions: "Echo the supplied text."
+      context: { text: input.text }
+    }
+      on error => fail ERROR
+      on invalid => fail INVALID
+    return reply
+  } else {
+    original = call echo(text: input.text)
+      on timeout => fail TIMEOUT
+      on error => fail ERROR
+      on invalid => fail INVALID
+    reply = generate Message using model("mock") {
+      instructions: "Echo the supplied text."
+      context: { text: original.text }
+    }
+      on error => fail ERROR
+      on invalid => fail INVALID
+    return reply
+  }
+}

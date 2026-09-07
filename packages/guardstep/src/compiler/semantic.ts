@@ -3,8 +3,10 @@ import type {
   SourceRange,
   TypeReference,
   WorkflowDeclaration,
-  WorkflowIrV1,
+  WorkflowIr,
+  WorkflowStep,
 } from "../ir/index.js";
+import { assertSupportedIr, summarizeFlow } from "../ir/control-flow.js";
 import type { Diagnostic } from "./diagnostics.js";
 import type { ParsedProgram } from "./parser.js";
 
@@ -149,9 +151,9 @@ export class SemanticAnalyzer {
     const variables = new Map<string, InferredType>([
       [workflow.input.parameter, { kind: "named", name: workflow.input.type }],
     ]);
-    let returnCount = 0;
-    const toolStepCount = workflow.steps.filter(({ kind }) => kind === "tool").length;
-    const modelStepCount = workflow.steps.filter(({ kind }) => kind === "model").length;
+    const flow = summarizeFlow(workflow.steps);
+    const toolStepCount = flow.maximum.tool;
+    const modelStepCount = flow.maximum.model;
     if (toolStepCount > workflow.limits.tool_calls) {
       this.error(
         "GS2005",
@@ -167,86 +169,102 @@ export class SemanticAnalyzer {
       );
     }
 
-    for (const [index, step] of workflow.steps.entries()) {
-      if (returnCount > 0) {
-        this.error("GS2203", "A workflow cannot contain a step after return", step.source);
-      }
-      if (step.kind === "tool") {
-        const tool = this.tools.get(step.tool);
-        if (tool === undefined) {
-          this.error("GS2001", `Call references unknown tool '${step.tool}'`, step.source);
+    const validateSteps = (steps: readonly WorkflowStep[], variables: Map<string, InferredType>): boolean => {
+      let terminated = false;
+      for (const step of steps) {
+        if (terminated) {
+          this.error("GS2203", "Unreachable step after a terminal return, fail, or branch", step.source);
         }
-        if (!capabilityNames.includes(step.tool)) {
-          this.error("GS2002", `Tool '${step.tool}' is called without a declared capability`, step.source);
-        }
-        validateFailure(step.timeout_error, step.source);
-        validateFailure(step.error_error, step.source);
-        validateFailure(step.invalid_error, step.source);
-        if (variables.has(step.assign)) {
-          this.error("GS2103", `Variable '${step.assign}' is already defined`, step.source);
-        }
-        if (tool !== undefined) {
-          const supplied = Object.keys(step.arguments);
-          const expected = tool.parameters.map(({ name }) => name);
-          for (const name of expected) {
-            if (!(name in step.arguments)) this.error("GS2104", `Missing argument '${name}' for ${tool.name}`, step.source);
+        if (step.kind === "branch") {
+          const condition = this.inferExpression(step.condition, variables, step.source);
+          if (condition.kind !== "boolean" && condition.kind !== "unknown") {
+            this.error("GS2201", `Branch condition must be boolean, received ${typeKey(condition)}`, step.source);
           }
-          for (const name of supplied) {
-            if (!expected.includes(name)) this.error("GS2104", `Unknown argument '${name}' for ${tool.name}`, step.source);
+          const yesTerminates = validateSteps(step.then, new Map(variables));
+          const noTerminates = validateSteps(step.else, new Map(variables));
+          terminated = terminated || (yesTerminates && noTerminates);
+        } else if (step.kind === "fail") {
+          validateFailure(step.error, step.source);
+          terminated = true;
+        } else if (step.kind === "tool") {
+          const tool = this.tools.get(step.tool);
+          if (tool === undefined) {
+            this.error("GS2001", `Call references unknown tool '${step.tool}'`, step.source);
           }
-          for (const parameter of tool.parameters) {
-            const argument = step.arguments[parameter.name];
-            if (argument !== undefined) {
-              const actual = this.inferExpression(argument, variables, step.source);
-              if (!sameType(actual, parameter.type)) {
-                this.error(
-                  "GS2105",
-                  `Argument '${parameter.name}' expects ${typeKey(parameter.type)}, received ${typeKey(actual)}`,
-                  step.source,
-                );
+          if (!capabilityNames.includes(step.tool)) {
+            this.error("GS2002", `Tool '${step.tool}' is called without a declared capability`, step.source);
+          }
+          validateFailure(step.timeout_error, step.source);
+          validateFailure(step.error_error, step.source);
+          validateFailure(step.invalid_error, step.source);
+          if (variables.has(step.assign)) {
+            this.error("GS2103", `Variable '${step.assign}' is already defined`, step.source);
+          }
+          if (tool !== undefined) {
+            const supplied = Object.keys(step.arguments);
+            const expected = tool.parameters.map(({ name }) => name);
+            for (const name of expected) {
+              if (!(name in step.arguments)) this.error("GS2104", `Missing argument '${name}' for ${tool.name}`, step.source);
+            }
+            for (const name of supplied) {
+              if (!expected.includes(name)) this.error("GS2104", `Unknown argument '${name}' for ${tool.name}`, step.source);
+            }
+            for (const parameter of tool.parameters) {
+              const argument = step.arguments[parameter.name];
+              if (argument !== undefined) {
+                const actual = this.inferExpression(argument, variables, step.source);
+                if (!sameType(actual, parameter.type)) {
+                  this.error(
+                    "GS2105",
+                    `Argument '${parameter.name}' expects ${typeKey(parameter.type)}, received ${typeKey(actual)}`,
+                    step.source,
+                  );
+                }
               }
             }
+            variables.set(step.assign, tool.output);
           }
-          variables.set(step.assign, tool.output);
-        }
-      } else if (step.kind === "model") {
-        if (this.typeDeclarations.get(step.output_type) !== "record") {
-          this.error("GS1202", `Generated type '${step.output_type}' must be a record`, step.source);
-        }
-        validateFailure(step.error_error, step.source);
-        validateFailure(step.invalid_error, step.source);
-        if (variables.has(step.assign)) {
-          this.error("GS2103", `Variable '${step.assign}' is already defined`, step.source);
-        }
-        for (const expression of Object.values(step.context)) {
-          this.inferExpression(expression, variables, step.source);
-        }
-        variables.set(step.assign, { kind: "named", name: step.output_type });
-      } else if (step.kind === "assertion") {
-        validateFailure(step.error, step.source);
-        const condition = this.inferExpression(step.condition, variables, step.source);
-        if (condition.kind !== "boolean" && condition.kind !== "unknown") {
-          this.error("GS2201", `Assertion must be boolean, received ${typeKey(condition)}`, step.source);
-        }
-      } else {
-        returnCount += 1;
-        const returned = this.inferExpression(step.value, variables, step.source);
-        const expected: TypeReference = { kind: "named", name: workflow.output };
-        if (!sameType(returned, expected)) {
-          this.error(
-            "GS2202",
-            `Workflow returns ${typeKey(returned)}, expected ${workflow.output}`,
-            step.source,
-          );
-        }
-        if (index !== workflow.steps.length - 1) {
-          this.error("GS2203", "Return must be the final workflow step", step.source);
+        } else if (step.kind === "model") {
+          if (this.typeDeclarations.get(step.output_type) !== "record") {
+            this.error("GS1202", `Generated type '${step.output_type}' must be a record`, step.source);
+          }
+          validateFailure(step.error_error, step.source);
+          validateFailure(step.invalid_error, step.source);
+          if (variables.has(step.assign)) {
+            this.error("GS2103", `Variable '${step.assign}' is already defined`, step.source);
+          }
+          for (const expression of Object.values(step.context)) {
+            this.inferExpression(expression, variables, step.source);
+          }
+          variables.set(step.assign, { kind: "named", name: step.output_type });
+        } else if (step.kind === "assertion") {
+          validateFailure(step.error, step.source);
+          const condition = this.inferExpression(step.condition, variables, step.source);
+          if (condition.kind !== "boolean" && condition.kind !== "unknown") {
+            this.error("GS2201", `Assertion must be boolean, received ${typeKey(condition)}`, step.source);
+          }
+        } else {
+          terminated = true;
+          const returned = this.inferExpression(step.value, variables, step.source);
+          const expected: TypeReference = { kind: "named", name: workflow.output };
+          if (!sameType(returned, expected)) {
+            this.error(
+              "GS2202",
+              `Workflow returns ${typeKey(returned)}, expected ${workflow.output}`,
+              step.source,
+            );
+          }
         }
       }
-    }
+      return terminated;
+    };
 
-    if (returnCount === 0) this.error("GS2202", `Workflow '${workflow.name}' has no return`, workflow.source);
-    if (returnCount > 1) this.error("GS2202", `Workflow '${workflow.name}' has multiple returns`, workflow.source);
+    if (!validateSteps(workflow.steps, variables)) {
+      const hasControlFlow = workflow.steps.some((step) => step.kind === "branch" || step.kind === "fail");
+      this.error("GS2202", hasControlFlow
+        ? `Workflow '${workflow.name}' must return or fail on every path`
+        : `Workflow '${workflow.name}' has no return`, workflow.source);
+    }
   }
 
   private inferExpression(
@@ -360,9 +378,11 @@ export class SemanticAnalyzer {
   }
 }
 
-export const validateIrShape = (ir: WorkflowIrV1): readonly string[] => {
+export const validateIrShape = (ir: WorkflowIr): readonly string[] => {
   const errors: string[] = [];
-  if (ir.schema_version !== 1) errors.push("schema_version must be 1");
+  try { assertSupportedIr(ir); } catch (error) {
+    errors.push(error instanceof Error ? error.message : "Unsupported IR");
+  }
   if (ir.workflows.length === 0) errors.push("IR must contain at least one workflow");
   if (!/^sha256:[0-9a-f]{64}$/.test(ir.source.sha256)) errors.push("source.sha256 is invalid");
   return errors;

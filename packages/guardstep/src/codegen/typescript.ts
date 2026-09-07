@@ -5,8 +5,10 @@ import type {
   ModelStep,
   ToolDeclaration,
   TypeReference,
-  WorkflowIrV1,
+  WorkflowIr,
+  WorkflowStep,
 } from "../ir/index.js";
+import { assertSupportedIr } from "../ir/control-flow.js";
 import { GUARDSTEP_VERSION } from "../version.js";
 
 export class TypeScriptGenerationError extends Error {
@@ -57,7 +59,7 @@ const pascalCase = (value: string): string =>
 
 const toolSymbol = (tool: ToolDeclaration): string => `${pascalCase(tool.name)}Tool`;
 const modelSymbol = (workflowName: string, step: ModelStep): string =>
-  `${pascalCase(workflowName)}${pascalCase(step.assign)}Model`;
+  `${pascalCase(workflowName)}${pascalCase(step.step_id.split("/").slice(1, -1).join("/"))}${pascalCase(step.assign)}Model`;
 
 type InferredType =
   | TypeReference
@@ -73,7 +75,7 @@ const renderInferredType = (type: InferredType): string => {
 const inferExpressionType = (
   expression: Expression,
   environment: ReadonlyMap<string, InferredType>,
-  ir: WorkflowIrV1,
+  ir: WorkflowIr,
 ): InferredType => {
   if (expression.kind === "identifier") {
     const variable = environment.get(expression.name);
@@ -105,31 +107,37 @@ interface ModelContract {
   readonly context: Readonly<Record<string, InferredType>>;
 }
 
-const collectModelContracts = (ir: WorkflowIrV1): readonly ModelContract[] => {
+const collectModelContracts = (ir: WorkflowIr): readonly ModelContract[] => {
   const contracts: ModelContract[] = [];
   for (const workflow of ir.workflows) {
     const environment = new Map<string, InferredType>([
       [workflow.input.parameter, { kind: "named", name: workflow.input.type }],
     ]);
-    for (const step of workflow.steps) {
-      if (step.kind === "tool") {
-        const tool = ir.declarations.tools.find(({ name }) => name === step.tool);
-        if (tool === undefined) throw new TypeScriptGenerationError(`IR references unknown tool '${step.tool}'`);
-        environment.set(step.assign, tool.output);
-      } else if (step.kind === "model") {
-        contracts.push({
-          symbol: modelSymbol(workflow.name, step),
-          step,
-          context: Object.fromEntries(
-            Object.entries(step.context).map(([name, expression]) => [
-              name,
-              inferExpressionType(expression, environment, ir),
-            ]),
-          ),
-        });
-        environment.set(step.assign, { kind: "named", name: step.output_type });
+    const visit = (steps: readonly WorkflowStep[], environment: Map<string, InferredType>): void => {
+      for (const step of steps) {
+        if (step.kind === "tool") {
+          const tool = ir.declarations.tools.find(({ name }) => name === step.tool);
+          if (tool === undefined) throw new TypeScriptGenerationError(`IR references unknown tool '${step.tool}'`);
+          environment.set(step.assign, tool.output);
+        } else if (step.kind === "model") {
+          contracts.push({
+            symbol: modelSymbol(workflow.name, step),
+            step,
+            context: Object.fromEntries(
+              Object.entries(step.context).map(([name, expression]) => [
+                name,
+                inferExpressionType(expression, environment, ir),
+              ]),
+            ),
+          });
+          environment.set(step.assign, { kind: "named", name: step.output_type });
+        } else if (step.kind === "branch") {
+          visit(step.then, new Map(environment));
+          visit(step.else, new Map(environment));
+        }
       }
-    }
+    };
+    visit(workflow.steps, environment);
   }
   return contracts;
 };
@@ -200,7 +208,7 @@ const renderUnion = (values: readonly string[], indent = "  "): string =>
     ? "never"
     : `\n${values.map((value) => `${indent}| ${JSON.stringify(value)}`).join("\n")}`;
 
-const validateNames = (ir: WorkflowIrV1, modelContracts: readonly ModelContract[]): void => {
+const validateNames = (ir: WorkflowIr, modelContracts: readonly ModelContract[]): void => {
   const declaredNames = [
     ...ir.declarations.enums.map(({ name }) => name),
     ...ir.declarations.records.map(({ name }) => name),
@@ -242,7 +250,8 @@ const validateNames = (ir: WorkflowIrV1, modelContracts: readonly ModelContract[
   }
 };
 
-export const generateTypeScript = (ir: WorkflowIrV1): string => {
+export const generateTypeScript = (ir: WorkflowIr): string => {
+  assertSupportedIr(ir);
   const modelContracts = collectModelContracts(ir);
   validateNames(ir, modelContracts);
   const lines: string[] = [

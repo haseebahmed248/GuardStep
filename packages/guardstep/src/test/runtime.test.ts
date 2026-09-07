@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compileSource } from "../compiler/index.js";
-import type { WorkflowIrV1 } from "../ir/index.js";
+import type { WorkflowIr } from "../ir/index.js";
 import {
   executeWorkflow,
   RuntimeConfigurationError,
@@ -23,7 +23,9 @@ const pricing = {
   effective_date: "2026-08-31",
 };
 
-const withDuration = (maximumMs: number): WorkflowIrV1 => ({
+const withDuration = (maximumMs: number): WorkflowIr => {
+  if (ir.schema_version !== 1) assert.fail("Expected legacy linear IR");
+  return {
   ...ir,
   workflows: ir.workflows.map((workflow) => ({
     ...workflow,
@@ -32,7 +34,8 @@ const withDuration = (maximumMs: number): WorkflowIrV1 => ({
       duration: { ...workflow.limits.duration, maximum_ms: maximumMs },
     },
   })),
-});
+  };
+};
 
 test("rejects invalid public input before emitting workflow events", async () => {
   await assert.rejects(

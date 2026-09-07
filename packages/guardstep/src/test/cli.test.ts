@@ -93,3 +93,16 @@ test("diagnostics are source-located and produce a non-zero exit", () => {
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test("branching example compiles to v2 and runs through the CLI and fixture runner", () => {
+  const example = `${repositoryRoot}examples/branching/decide.guard`;
+  for (const command of ["check", "compile", "run", "test"] as const) {
+    const result = runCli([command, example]);
+    assert.equal(result.status, 0, result.stderr);
+    if (command === "compile") assert.equal(JSON.parse(result.stdout).schema_version, 2);
+    if (command === "run") assert.deepEqual(JSON.parse(result.stdout).output, { text: "[mock model] [tool] hello" });
+    if (command === "test") assert.match(result.stdout, /5\/5 scenarios passed/);
+  }
+  const generated = runCli(["generate", example, "--check"]);
+  assert.equal(generated.status, 0, generated.stderr);
+});
