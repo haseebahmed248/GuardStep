@@ -32,7 +32,57 @@ Major language, IR, runtime, security, and governance changes require an RFC bef
 4. Keep commits focused and explain design tradeoffs in the pull request.
 5. Update relevant documentation.
 
-Project-specific build and test commands will be added when the executable prototype is scaffolded.
+## Development setup
+
+GuardStep currently requires Node.js 22 or newer.
+
+Install the project dependencies:
+
+```bash
+npm ci
+```
+
+Build the project:
+
+```bash
+npm run build
+```
+
+Run the type checks:
+
+```bash
+npm run check
+```
+
+Verify that generated contracts are up to date:
+
+```bash
+npm run check:generated
+```
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+The repository also provides the `./gs` wrapper for running the local GuardStep CLI:
+
+```bash
+./gs check examples/document-qa/answer.guard
+./gs compile examples/document-qa/answer.guard
+./gs generate examples/document-qa/answer.guard
+./gs run examples/document-qa/answer.guard
+./gs test examples/document-qa/answer.guard
+```
+
+The executable document-Q&A example is located at:
+
+```text
+examples/document-qa/answer.guard
+```
+
+The `./gs` wrapper is intended for repository development. Installed GuardStep packages expose the `guardstep` and `gs` commands directly.
 
 ## Documentation standard
 
