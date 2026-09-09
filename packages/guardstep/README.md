@@ -1,5 +1,14 @@
 # GuardStep CLI alpha
 
+> **Experimental alpha software — not ready for production use.**
+
+Install the latest alpha release from npm:
+
+```bash
+npm install guardstep@alpha
+```
+The package provides the `guardstep` CLI, with `gs` available as an alias.
+
 This package contains the first executable GuardStep vertical slice:
 
 - a lexer and recursive-descent parser for the initial `.guard` subset;
@@ -11,6 +20,9 @@ This package contains the first executable GuardStep vertical slice:
 - capability, call-count, wall-clock duration, cost, assertion, and output enforcement;
 - portable execution-event v1 emission; and
 - `check`, `compile`, local `run`, and deterministic `test` commands.
+
+
+## Repository development
 
 From the repository root:
 

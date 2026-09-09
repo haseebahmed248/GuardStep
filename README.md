@@ -7,11 +7,26 @@
 
 <p align="center"><strong>AI workflows, one guarded step at a time.</strong></p>
 
+[![npm version](https://img.shields.io/npm/v/guardstep/alpha)](https://www.npmjs.com/package/guardstep)
+
 GuardStep is an experimental open-source language for AI workflows. A GuardStep file declares data contracts, model calls, tool access, enforceable budgets, approval points, and failure conditions in one place.
 
 The repository now contains an executable alpha vertical slice: the CLI parses and checks the document-Q&A workflow, compiles it to versioned IR, generates TypeScript contracts, and runs it with either deterministic adapters or a real local Ollama model. The runtime enforces wall-clock deadlines and aborts in-flight adapters when the declared duration is exhausted. It is not ready for production use.
 
-## Try it
+## Install
+
+GuardStep is experimental alpha software and is not ready for production use.
+
+Install the latest alpha release from npm:
+
+```bash
+npm install guardstep@alpha
+```
+See the [GuardStep package on npm](https://www.npmjs.com/package/guardstep).
+
+## Try it from the repository
+
+For contributors working from the repository:
 
 ```bash
 npm install
