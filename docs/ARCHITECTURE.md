@@ -82,6 +82,11 @@ The compiler emits an IR bundle plus JSON Schemas and metadata. Provider credent
 
 ## Runtime semantics
 
+The current branching source preview is documented in [BRANCHING.md](BRANCHING.md).
+It uses lexical block environments, one shared execution budget and IR v2 for
+control flow, while retaining v1 output for linear programs. See
+[RFC 0002](rfcs/0002-typed-workflow-branching.md) for the pending design review.
+
 ### Execution states
 
 `pending`, `running`, `waiting`, `succeeded`, `failed`, and `cancelled`.

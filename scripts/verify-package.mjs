@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   lstatSync,
   mkdtempSync,
   mkdirSync,
@@ -132,6 +133,12 @@ try {
   );
   run(process.execPath, [importCheckPath], consumerRoot);
 
+  // Exercise v2 with the actual installed artifact, not workspace source imports.
+  for (const filename of ["decide.guard", "decide.host.mjs", "decide.input.json", "decide.test.mjs"]) {
+    copyFileSync(join(repositoryRoot, "examples", "branching", filename), join(consumerRoot, filename));
+  }
+  run(process.execPath, [join(installedRoot, "dist", "cli", "main.js"), "generate", "decide.guard"], consumerRoot);
+
   const typeCheckPath = join(consumerRoot, "verify-types.ts");
   writeFileSync(
     typeCheckPath,
@@ -153,7 +160,7 @@ try {
           strict: true,
           target: "ES2022",
         },
-        files: ["verify-types.ts"],
+        files: ["verify-types.ts", "decide.generated.ts"],
       },
       null,
       2,
@@ -186,6 +193,16 @@ try {
     if (output !== installedManifest.version) {
       fail(`${binaryName} reported ${JSON.stringify(output)} instead of ${installedManifest.version}`);
     }
+    const execution = JSON.parse(run(executablePath, ["run", "decide.guard"], consumerRoot, {
+      shell: process.platform === "win32",
+    }));
+    if (execution.status !== "succeeded" || execution.output?.text !== "[mock model] [tool] hello") {
+      fail(`${binaryName} did not execute the installed v2 branching example`);
+    }
+    const scenarios = run(executablePath, ["test", "decide.guard"], consumerRoot, {
+      shell: process.platform === "win32",
+    });
+    if (!scenarios.includes("5/5 scenarios passed.")) fail(`${binaryName} did not pass the branching fixtures`);
   }
 
   console.log(

@@ -1,4 +1,4 @@
-import type { WorkflowIrV1 } from "../ir/index.js";
+import type { WorkflowIr } from "../ir/index.js";
 
 export interface TokenUsage {
   readonly input_tokens: number;
@@ -90,7 +90,7 @@ export interface PortableEvent {
 }
 
 export interface ExecuteOptions {
-  readonly ir: WorkflowIrV1;
+  readonly ir: WorkflowIr;
   readonly workflow: string;
   readonly runId: string;
   readonly input: unknown;

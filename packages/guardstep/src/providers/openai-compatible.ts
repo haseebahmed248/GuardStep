@@ -179,7 +179,15 @@ const readResponseText = async (
   response: Response,
   maxResponseBytes: number,
 ): Promise<{ readonly status: "succeeded"; readonly text: string } | { readonly status: "too_large" }> => {
-  if (responseIsTooLarge(response, maxResponseBytes)) return { status: "too_large" };
+  if (responseIsTooLarge(response, maxResponseBytes)) {
+    try {
+      // A custom fetch stream's cancellation may never settle.
+      void response.body?.cancel().catch(() => {});
+    } catch {
+      // Cleanup must not replace the known size failure with a network error.
+    }
+    return { status: "too_large" };
+  }
   if (response.body === null) return { status: "succeeded", text: "" };
 
   const reader = response.body.getReader();

@@ -1,0 +1,16 @@
+enum Failure { STOP DURATION COST }
+record Input { text: String }
+workflow NonBoolean(input: Input) -> Input fails Failure {
+  capabilities {}
+  limits {
+    tool_calls <= 0
+    model_calls <= 0
+    duration <= 1s else DURATION
+    cost <= 0 USD else COST
+  }
+  if input.text {
+    return input
+  } else {
+    fail STOP
+  }
+}
