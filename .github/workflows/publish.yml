@@ -108,5 +108,6 @@ jobs:
       - name: Create release notes
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: gh release create "$RELEASE_TAG" --verify-tag --generate-notes --prerelease --title "GuardStep $RELEASE_TAG"
