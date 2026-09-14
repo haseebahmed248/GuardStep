@@ -267,6 +267,106 @@ test("does not let a model provider choose a public workflow failure code", asyn
   assert.doesNotMatch(JSON.stringify(run.events), /PROVIDER_CONTROLLED_CODE/);
 });
 
+for (const elapsedMs of [20_000, 20_001]) {
+  test(`does not dispatch the Q&A model after ${elapsedMs} ms of tool accounting`, async () => {
+    let toolCalls = 0;
+    let modelCalls = 0;
+    const run = await executeWorkflow({
+      ir,
+      workflow: "AnswerQuestion",
+      runId: `accounted-deadline-${elapsedMs}`,
+      input: { question: "test" },
+      grantedCapabilities: new Set(["documents.search"]),
+      pricing,
+      // Keep wall time fixed so this reproduces exhaustion by adapter accounting alone.
+      clock: { now: () => 0, schedule: () => () => {} },
+      tools: { invoke: async () => {
+        toolCalls += 1;
+        return { status: "succeeded", value: [], elapsedMs };
+      } },
+      model: { generate: async () => {
+        modelCalls += 1;
+        return {
+          status: "succeeded",
+          value: { status: "insufficient_context", text: "test", citations: [] },
+          elapsedMs: 1,
+          usage: { input_tokens: 1, output_tokens: 1 },
+        };
+      } },
+    });
+
+    assert.equal(toolCalls, 1);
+    assert.equal(modelCalls, 0);
+    assert.equal(run.status, "failed");
+    assert.equal(run.status === "failed" ? run.error_code : undefined, "DURATION_LIMIT_EXCEEDED");
+    assert.deepEqual(run.events.slice(-2).map(({ type }) => type), ["budget.exceeded", "run.failed"]);
+    assert.deepEqual(run.events.at(-2)?.data, {
+      error_code: "DURATION_LIMIT_EXCEEDED", actual: elapsedMs, maximum: 20_000, unit: "ms",
+    });
+    assert.ok(!run.events.some(({ type }) => type === "model.succeeded"));
+  });
+}
+
+for (const effect of ["tool", "model"] as const) {
+  for (const expiredAt of [20_000, 20_001]) {
+    test(`does not dispatch ${effect} when evaluation advances wall time to ${expiredAt} ms`, async () => {
+      let now = 0;
+      let clockStarted = false;
+      let toolCalls = 0;
+      let modelCalls = 0;
+      let expiredDuringEvaluation = false;
+      const clock: RuntimeClock = {
+        now: () => { clockStarted = true; return now; },
+        schedule: () => () => {},
+      };
+      const run = await executeWorkflow({
+        ir,
+        workflow: "AnswerQuestion",
+        runId: `${effect}-evaluation-deadline-${expiredAt}`,
+        input: {
+          get question() {
+            // Initial schema validation occurs before the runtime clock starts.
+            // Expire on argument evaluation, or on context evaluation after the tool.
+            if (clockStarted && (effect === "tool" || toolCalls === 1)) {
+              now = expiredAt;
+              expiredDuringEvaluation = true;
+            }
+            return "test";
+          },
+        },
+        grantedCapabilities: new Set(["documents.search"]),
+        pricing,
+        clock,
+        tools: { invoke: async () => {
+          toolCalls += 1;
+          return { status: "succeeded", value: [], elapsedMs: 0 };
+        } },
+        model: { generate: async () => {
+          modelCalls += 1;
+          return {
+            status: "succeeded",
+            value: { status: "insufficient_context", text: "test", citations: [] },
+            elapsedMs: 0,
+            usage: { input_tokens: 0, output_tokens: 0 },
+          };
+        } },
+      });
+
+      assert.equal(expiredDuringEvaluation, true);
+      assert.equal(toolCalls, effect === "tool" ? 0 : 1);
+      assert.equal(modelCalls, 0);
+      assert.equal(run.status, "failed");
+      assert.equal(run.status === "failed" ? run.error_code : undefined, "DURATION_LIMIT_EXCEEDED");
+      assert.deepEqual(run.events.slice(-2).map(({ type }) => type), ["budget.exceeded", "run.failed"]);
+      assert.deepEqual(run.events.at(-2)?.data, {
+        error_code: "DURATION_LIMIT_EXCEEDED", actual: expiredAt, maximum: 20_000, unit: "ms",
+      });
+      assert.equal(run.events.at(-1)?.sequence, run.events.length - 1);
+      assert.equal(run.events.filter(({ type }) => type === "run.failed").length, 1);
+    });
+  }
+}
+
 test("aborts a hanging tool when the workflow wall-clock deadline expires", { timeout: 1_000 }, async () => {
   let toolSignal: AbortSignal | undefined;
   const startedAt = performance.now();
