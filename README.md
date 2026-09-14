@@ -31,27 +31,34 @@ npm run demo:ollama
 
 The short `gs` wrapper is for repository development. Installed packages expose both `guardstep` and `gs`. See the [CLI alpha documentation](packages/guardstep/README.md) and [model-provider setup](docs/PROVIDERS.md).
 
-## The idea
+## How it works
 
-An AI feature often has logic in several places: prompts, model SDK calls, validation schemas, tool handlers, retry code, authorization checks, and client streaming code. GuardStep tests whether those parts can be represented as one typed workflow without hiding their effects.
+GuardStep keeps tool permissions, budgets, and failure handling alongside the steps of an AI workflow. In the document-Q&A example, the workflow searches documents, passes them to a model, and checks the answer's output schema and citation assertions.
+
+The following is an unchanged excerpt from the beginning of [the document-Q&A workflow](examples/document-qa/answer.guard), **not a complete standalone program**. The full file includes the record, enum, and tool declarations, followed by the rest of the workflow.
 
 ```guardstep
-workflow AnswerQuestion(input: Question) -> Answer {
-  allow tools [documents.search]
-  limit cost <= 0.05 USD
-  limit duration <= 20s
-
-  context = call documents.search(query: input.text)
-  answer = generate Answer using model("balanced") {
-    "Answer using only the supplied context: {context}"
+workflow AnswerQuestion(input: Question) -> Answer fails FailureCode {
+  capabilities {
+    documents.search else CAPABILITY_DENIED
   }
 
-  require answer.citations.length > 0
-  return answer
-}
+  limits {
+    tool_calls <= 1
+    model_calls <= 1
+    duration <= 20s else DURATION_LIMIT_EXCEEDED
+    cost <= 0.05 USD else COST_LIMIT_EXCEEDED
+  }
+
+  documents = call documents.search(question: input.question)
+    on timeout => fail SEARCH_TIMEOUT
+    on error => fail TOOL_CALL_FAILED
+    on invalid => fail TOOL_OUTPUT_INVALID
 ```
 
-The syntax above is illustrative, not a committed specification. The executable [standalone document Q&A workflow](examples/document-qa/answer.guard) is the current Stage 1 subset; the [embedded TypeScript draft](examples/document-qa/answer.workflow.ts) remains design evidence. See the [syntax options](docs/SYNTAX.md) for their shared semantics and tradeoffs.
+Use the repository setup commands above with the full example, not the excerpt. Running it also uses the neighboring [input](examples/document-qa/answer.input.json) and [host](examples/document-qa/answer.host.mjs) files. The default host and [test fixtures](examples/document-qa/answer.test.mjs) are deterministic and need no API key or Ollama.
+
+This remains experimental alpha software, not a production-ready system. Earlier syntax alternatives and their tradeoffs are kept in the [syntax design notes](docs/SYNTAX.md).
 
 ## Name
 
