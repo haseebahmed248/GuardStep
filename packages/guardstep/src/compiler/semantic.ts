@@ -14,6 +14,7 @@ type InferredType =
   | TypeReference
   | { readonly kind: "boolean" }
   | { readonly kind: "number" }
+  | { readonly kind: "null" }
   | { readonly kind: "unknown" };
 
 const typeKey = (type: InferredType): string => {
@@ -22,8 +23,13 @@ const typeKey = (type: InferredType): string => {
   return type.kind;
 };
 
-const sameType = (left: InferredType, right: InferredType): boolean =>
-  left.kind === "unknown" || right.kind === "unknown" || typeKey(left) === typeKey(right);
+const sameType = (left: InferredType, right: InferredType): boolean => {
+  if (left.kind === "unknown" || right.kind === "unknown") return true;
+  if (left.kind === "named" && right.kind === "named") return left.name === right.name;
+  if (left.kind === "list" && right.kind === "list") return sameType(left.element, right.element);
+  // Diagnostic display names are not type identities (e.g. a record named null).
+  return left.kind === right.kind;
+};
 
 export class SemanticAnalyzer {
   private readonly diagnostics: Diagnostic[] = [];
@@ -273,6 +279,7 @@ export class SemanticAnalyzer {
     range: SourceRange,
   ): InferredType {
     if (expression.kind === "literal") {
+      if (expression.value === null) return { kind: "null" };
       if (typeof expression.value === "number") return { kind: "number" };
       if (typeof expression.value === "boolean") return { kind: "boolean" };
       return { kind: "named", name: "String" };

@@ -22,7 +22,7 @@ The initial proof gates are:
 | `GS2003` | failure outside the workflow failure set |
 | `GS2004` | effect attempted inside a pure expression |
 | `GS2102` | invalid field access |
-| `GS2105` | incompatible expression operands, including unsupported ordering |
+| `GS2105` | incompatible tool arguments or expression operands, including unsupported ordering |
 | `GS2201` | non-boolean assertion or branch condition |
 | `GS2202` | missing final-result path or incompatible return type |
 | `GS2203` | unreachable statement after return, fail, or an exhaustive terminal branch |
@@ -36,6 +36,13 @@ once in its block or call. A repeated key produces `GS1101` at that key's
 source location before its value can replace the earlier entry. This applies
 even when both values are identical. Unique entries may be reordered, and
 names may be reused in separate calls, context blocks, or workflow limits.
+
+## Null arguments
+
+`null` is inferred separately from `String` and is rejected for non-nullable
+tool parameters with `GS2105`. The string `"null"` remains an ordinary string.
+Explicit null values in model context remain supported; this does not add
+nullable type declarations or change the grammar.
 
 ## Comparison operands
 
