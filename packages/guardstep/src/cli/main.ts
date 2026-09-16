@@ -16,6 +16,7 @@ Usage:
   gs generate [workflow.guard] [--out workflow.generated.ts] [--check]
   gs run [workflow.guard] [--input input.json] [--host workflow.host.mjs]
   gs test [workflow.guard] [--suite workflow.test.mjs]
+  gs lsp [--stdio]
   guardstep version
 
 If the current directory contains exactly one .guard file, the path may be omitted.
@@ -34,6 +35,11 @@ const main = async (): Promise<void> => {
   }
   if (command.command === "version") {
     context.stdout(GUARDSTEP_VERSION);
+    return;
+  }
+  if (command.command === "lsp") {
+    const { startLanguageServer } = await import("../lsp/server.js");
+    startLanguageServer();
     return;
   }
   if (command.command === "check") {

@@ -27,7 +27,7 @@ const run = (command, argumentsValue, cwd, options = {}) => {
     cwd,
     encoding: "utf8",
     shell: options.shell ?? (process.platform === "win32" && command.endsWith(".cmd")),
-    env: process.env,
+    env: { ...process.env, ...options.env },
   });
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) {
@@ -120,6 +120,11 @@ try {
   }
   const installedManifest = JSON.parse(installedManifestSource);
   assertPublishMetadata(installedManifest);
+  // The editor command must also work from the distributed package with its
+  // installed dependencies, not just with the workspace's node_modules.
+  run(process.execPath, ["--test", join(packageRoot, "dist", "test", "lsp.test.js")], consumerRoot, {
+    env: { GUARDSTEP_TEST_CLI: join(installedRoot, "dist", "cli", "main.js") },
+  });
   const installedLicense = readFileSync(join(installedRoot, "LICENSE"), "utf8");
   const repositoryLicense = readFileSync(join(repositoryRoot, "LICENSE"), "utf8");
   if (installedLicense !== repositoryLicense) {
