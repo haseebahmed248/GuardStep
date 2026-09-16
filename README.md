@@ -96,6 +96,7 @@ GuardStep is now in **Stage 1: executable language slice**. The repository curre
 - a standalone `.guard` lexer, parser, semantic checker, and source-located diagnostics;
 - deterministic compilation to versioned, JSON-serializable workflow IR;
 - `check`, `compile`, `generate`, `run`, and `test` CLI commands;
+- a diagnostics-only `lsp --stdio` command for unsaved `.guard` buffers ([editor setup](docs/EDITOR.md));
 - generated TypeScript contracts for domain values, workflows, tools, models, and hosts;
 - an in-memory runtime enforcing capabilities, call limits, cost and duration budgets, assertions, and output schemas;
 - runtime-owned wall-clock deadlines with cancellation signals for tool and model adapters;

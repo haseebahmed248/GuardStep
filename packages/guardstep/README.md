@@ -49,4 +49,20 @@ The `test` command loads a neighboring `*.test.mjs` module. Test modules are exp
 
 `generate` writes a neighboring `*.generated.ts` file containing domain types, typed tool and model boundaries, workflow input/output/failure mappings, capabilities, and a typed host interface. It avoids rewriting unchanged output. Use `guardstep generate --check` in CI to fail when the generated file is missing or stale. This repository exposes the same check as `npm run check:generated`.
 
-This remains an alpha slice. The default host is deterministic so tests do not require a live service; the optional Ollama host exercises a real local model. The language does not yet include modules, branching syntax, persistent execution, approval, streaming, formatting, or an LSP.
+This remains an alpha slice. The default host is deterministic so tests do not require a live service; the optional Ollama host exercises a real local model. The language does not yet include modules, persistent execution, approval, streaming, or formatting.
+
+## Editor diagnostics (source checkout; not in npm alpha.1)
+
+`guardstep lsp --stdio` starts a diagnostics-only Language Server Protocol process;
+`gs lsp` is equivalent. In a built source checkout, use `./gs lsp --stdio`.
+The process waits for an editor client, rather than printing a human-readable result.
+Configure the editor to launch it directly, not through `npm run`, whose banner
+would interfere with protocol messages on stdout.
+
+Open and edited `.guard` buffers are checked in memory using the same compiler as
+`check`. Errors clear after valid edits or closing a document. No host modules,
+test modules, tools, or model providers are executed. Only full-document sync and
+UTF-16 positions are supported. Completion, hover, rename, and formatting are not
+implemented. See [editor setup and limitations](https://github.com/haseebahmed248/GuardStep/blob/main/docs/EDITOR.md)
+for a Neovim configuration and protocol details. This command requires a build
+containing this feature; the published `0.1.0-alpha.1` does not contain it.

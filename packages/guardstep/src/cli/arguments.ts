@@ -1,6 +1,7 @@
 export type ParsedCommand =
   | { readonly command: "help" }
   | { readonly command: "version" }
+  | { readonly command: "lsp" }
   | { readonly command: "check"; readonly sourcePath?: string }
   | { readonly command: "compile"; readonly sourcePath?: string; readonly outputPath?: string }
   | {
@@ -31,6 +32,12 @@ export const parseArguments = (argumentsValue: readonly string[]): ParsedCommand
   }
   if (command === "version" || command === "--version" || command === "-v") {
     return { command: "version" };
+  }
+  if (command === "lsp") {
+    if (argumentsValue.length > 2 || (sourcePath !== undefined && sourcePath !== "--stdio")) {
+      throw new Error("lsp accepts only --stdio (the default transport)");
+    }
+    return { command: "lsp" };
   }
   if (!["check", "compile", "generate", "run", "test"].includes(command)) {
     throw new Error(`Unknown command: ${command}`);
